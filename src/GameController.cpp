@@ -192,7 +192,7 @@ void GameController::doSomething()
 		case not_applicable:
 			break;
 		case welcome:
-			playSound(SOUND_THEME);
+			// playSound(SOUND_THEME);
 			m_mainMessage = "Welcome to Bugs!";
 			m_secondMessage = "Press Enter to begin play...";
 			setGameState(prompt);
