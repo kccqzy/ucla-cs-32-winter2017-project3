@@ -9,6 +9,7 @@ GameWorld* createStudentWorld(std::string assetDir) { return new StudentWorld(as
 
 int StudentWorld::init() {
     actors.clear();
+    newActors.clear();
     {
         Field f;
         {
@@ -28,6 +29,7 @@ int StudentWorld::init() {
             }
         }
     }
+    ticks = 0;
 
     return GWSTATUS_CONTINUE_GAME;
 }
@@ -40,7 +42,7 @@ int StudentWorld::move() {
     std::vector<ActorMap::iterator> deadActors;
     for (auto i = actors.begin(), ie = actors.end(); i != ie; ++i) {
         auto oldLocation = i->second->getCoord();
-        i->second->doSomething();
+        if (!i->second->isDead()) i->second->doSomething();
         auto newLocation = i->second->getCoord();
         if (i->second->isDead()) {
             deadActors.emplace_back(i);
