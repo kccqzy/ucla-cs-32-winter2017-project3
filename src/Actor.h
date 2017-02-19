@@ -29,15 +29,15 @@ class Actor : public GraphObject {
 
   public:
     virtual ~Actor() {}
-    virtual void doSomething() = 0;
+    virtual void doSomething() {}
     virtual int iid() const = 0;
     Coord getCoord() const { return std::make_pair(getX(), getY()); }
+    bool isDead() const { return m_dead; }
 };
 
 class Pebble final : public Actor {
   public:
     Pebble(StudentWorld& sw, Coord c) : Actor(sw, IID_ROCK, c, right, 1) {}
-    virtual void doSomething() override {}
     virtual int iid() const override { return IID_ROCK; }
 };
 
@@ -47,6 +47,12 @@ class EnergyHolder : public Actor {
     template <typename... Args>
     EnergyHolder(int initialEnergy, Args&&... args)
       : Actor(std::forward<Args>(args)...), m_currentEnergy{initialEnergy} {}
+};
+
+class Food final : public EnergyHolder {
+public:
+    Food(StudentWorld& sw, Coord c, int energy): EnergyHolder(energy, sw, IID_FOOD, c, right, 2) {}
+    virtual int iid() const override { return IID_FOOD; }
 };
 
 class BabyGrassHopper final : public EnergyHolder {
