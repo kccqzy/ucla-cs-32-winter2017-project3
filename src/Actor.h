@@ -26,6 +26,7 @@ class Actor : public GraphObject {
         }
     }
     void moveTo(Coord c) { GraphObject::moveTo(c.first, c.second); }
+    int attemptConsumeAtMostFood(int maxEnergy);
 
   public:
     virtual ~Actor() {}
