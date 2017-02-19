@@ -34,6 +34,8 @@ int StudentWorld::init() {
 
 int StudentWorld::move() {
     ticks++;
+
+    // Ask actors to doSomething.
     std::vector<std::pair<Coord, ActorMap::iterator>> movedActors;
     std::vector<ActorMap::iterator> deadActors;
     for (auto i = actors.begin(), ie = actors.end(); i != ie; ++i) {
@@ -46,14 +48,21 @@ int StudentWorld::move() {
             movedActors.emplace_back(newLocation, i);
         }
     }
+    // Remove dead, move moved, and add new actors.
     for (auto const& i : deadActors) actors.erase(i);
     for (auto const& i : movedActors) {
         auto val = std::move(i.second->second);
         actors.erase(i.second);
         actors.emplace(i.first, std::move(val));
     }
+    for (auto& i : newActors) { actors.emplace(i->getCoord(), std::move(i)); }
+    newActors.clear();
+
     setGameStatText(std::to_string(ticks));
     return ticks < 2000 ? GWSTATUS_CONTINUE_GAME : GWSTATUS_NO_WINNER;
 }
 
-void StudentWorld::cleanUp() { actors.clear(); }
+void StudentWorld::cleanUp() {
+    actors.clear();
+    newActors.clear();
+}

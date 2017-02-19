@@ -15,6 +15,7 @@ class StudentWorld final : public GameWorld {
     typedef std::pair<ActorMap::iterator, ActorMap::iterator> RawActorRange;
     ActorMap actors;
     int ticks;
+    std::vector<std::unique_ptr<Actor>> newActors;
 
     template <typename Actor, typename... Args>
     void insertActor(int x, int y, Args&&... args) {
@@ -23,7 +24,7 @@ class StudentWorld final : public GameWorld {
     }
 
   public:
-    StudentWorld(std::string assetDir) : GameWorld(assetDir), actors{}, ticks(0) {}
+    StudentWorld(std::string assetDir) : GameWorld(assetDir), actors{}, ticks(0), newActors{} {}
     virtual int init();
     virtual int move();
     virtual void cleanUp();
@@ -34,6 +35,11 @@ class StudentWorld final : public GameWorld {
         ActorRange(RawActorRange const& p) : RawActorRange(p) {}
     };
     ActorRange getActorsAt(Coord c) { return actors.equal_range(c); }
+
+    template <typename Actor, typename... Args>
+    void insertActorAtEndOfTick(Args&&... args) {
+        newActors.emplace_back(std::make_unique<Actor>(*this, std::forward<Args>(args)...));
+    }
 };
 
 
