@@ -1,9 +1,9 @@
 #include "StudentWorld.h"
+#include "Actor.h"
 #include "Field.h"
 #include <cstdio>
 #include <string>
 #include <vector>
-#include "Actor.h"
 
 GameWorld* createStudentWorld(std::string assetDir) { return new StudentWorld(assetDir); }
 
@@ -35,14 +35,18 @@ int StudentWorld::init() {
 int StudentWorld::move() {
     ticks++;
     std::vector<std::pair<Coord, ActorMap::iterator>> movedActors;
+    std::vector<ActorMap::iterator> deadActors;
     for (auto i = actors.begin(), ie = actors.end(); i != ie; ++i) {
         auto oldLocation = i->second->getCoord();
         i->second->doSomething();
         auto newLocation = i->second->getCoord();
-        if (oldLocation != newLocation) {
+        if (i->second->isDead()) {
+            deadActors.emplace_back(i);
+        } else if (oldLocation != newLocation) {
             movedActors.emplace_back(newLocation, i);
         }
     }
+    for (auto const& i : deadActors) actors.erase(i);
     for (auto const& i : movedActors) {
         auto val = std::move(i.second->second);
         actors.erase(i.second);
