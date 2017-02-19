@@ -3,6 +3,19 @@
 
 #include "GraphObject.h"
 
-// Students:  Add code to this file, Actor.cpp, StudentWorld.h, and StudentWorld.cpp
+class Actor : public GraphObject {
+protected:
+    Actor(Actor const&) = delete;
+    Actor& operator=(Actor const&) = delete;
+    using GraphObject::GraphObject;
+public:
+    virtual ~Actor() {}
+};
+
+class Pebble : public Actor {
+public:
+    Pebble(int x, int y) : Actor(IID_ROCK, x, y, right, 1.0, 1) {}
+    virtual ~Pebble() {}
+};
 
 #endif // ACTOR_H_
