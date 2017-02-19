@@ -14,19 +14,16 @@
 
 class StudentWorld : public GameWorld {
   private:
-    struct Coord {
-        int x, y;
-        Coord(int x, int y) : x(x), y(y) {}
-        Coord(GraphObject const& go) : x(go.getX()), y(go.getY()) {}
-        friend bool operator<(Coord const& a, Coord const& b) { return a.x == b.x ? a.y < b.y : a.x < b.x; }
-    };
-    typedef std::multimap<Coord, std::unique_ptr<Actor>> ActorMap;
+    static std::pair<int, int> extractCoord(GraphObject const& go) {
+        return std::make_pair(go.getX(), go.getY());
+    }
+    typedef std::multimap<std::pair<int, int>, std::unique_ptr<Actor>> ActorMap;
     ActorMap actors;
 
     template <typename Actor, typename... Args>
     void insertActor(Args&&... args) {
         auto p = std::make_unique<Actor>(std::forward<Args>(args)...);
-        actors.emplace(Coord(*p), std::move(p));
+        actors.emplace(extractCoord(*p), std::move(p));
     }
 
   public:
