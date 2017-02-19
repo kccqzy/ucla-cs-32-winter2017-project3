@@ -11,10 +11,10 @@ class StudentWorld;
 
 class Actor : public GraphObject {
   protected:
-    bool m_dead = false;
+    bool m_dead;
     StudentWorld& m_sw;
-    template <typename... Args>
-    Actor(StudentWorld& sw, Args&&... args) : GraphObject(std::forward<Args>(args)...), m_dead(false), m_sw(sw) {}
+    Actor(StudentWorld& sw, int iid, Coord c, Direction dir, unsigned depth)
+      : GraphObject(iid, c.first, c.second, dir, 0.25, depth), m_dead(false), m_sw(sw) {}
     bool attemptMove(Coord c) const;
     Coord nextLocation() const {
         switch (getDirection()) {
@@ -36,7 +36,7 @@ class Actor : public GraphObject {
 
 class Pebble final : public Actor {
   public:
-    Pebble(StudentWorld& sw, int x, int y) : Actor(sw, IID_ROCK, x, y, right, 1.0, 1) {}
+    Pebble(StudentWorld& sw, Coord c) : Actor(sw, IID_ROCK, c, right, 1) {}
     virtual void doSomething() override {}
     virtual int iid() const override { return IID_ROCK; }
 };
@@ -51,9 +51,8 @@ class EnergyHolder : public Actor {
 
 class BabyGrassHopper final : public EnergyHolder {
   public:
-    BabyGrassHopper(StudentWorld& sw, int x, int y)
-      : EnergyHolder(500, sw, IID_BABY_GRASSHOPPER, x, y, static_cast<GraphObject::Direction>(randInt(up, left)), 1.0,
-                     1),
+    BabyGrassHopper(StudentWorld& sw, Coord c)
+      : EnergyHolder(500, sw, IID_BABY_GRASSHOPPER, c, static_cast<GraphObject::Direction>(randInt(up, left)), 1),
         m_distance(randInt(2, 10)), m_sleep(0) {}
     virtual void doSomething() override {
         --m_currentEnergy;

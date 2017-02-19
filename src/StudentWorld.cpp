@@ -21,8 +21,8 @@ int StudentWorld::init() {
             for (int y = 0; y < VIEW_HEIGHT; ++y) {
                 switch (f.getContentsOf(x, y)) {
                 case Field::FieldItem::empty: break;
-                case Field::FieldItem::rock: insertActor<Pebble>(*this, x, y); break;
-                case Field::FieldItem::grasshopper: insertActor<BabyGrassHopper>(*this, x, y); break;
+                case Field::FieldItem::rock: insertActor<Pebble>(x, y); break;
+                case Field::FieldItem::grasshopper: insertActor<BabyGrassHopper>(x, y); break;
                 }
             }
         }

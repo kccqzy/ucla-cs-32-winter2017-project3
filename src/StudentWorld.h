@@ -16,12 +16,10 @@ class StudentWorld final : public GameWorld {
     ActorMap actors;
     int ticks;
 
-    static Coord extractCoord(GraphObject const& go) { return std::make_pair(go.getX(), go.getY()); }
-
     template <typename Actor, typename... Args>
-    void insertActor(Args&&... args) {
-        auto p = std::make_unique<Actor>(std::forward<Args>(args)...);
-        actors.emplace(extractCoord(*p), std::move(p));
+    void insertActor(int x, int y, Args&&... args) {
+        auto p = std::make_unique<Actor>(*this, std::make_pair(x, y), std::forward<Args>(args)...);
+        actors.emplace(p->getCoord(), std::move(p));
     }
 
   public:
@@ -33,11 +31,9 @@ class StudentWorld final : public GameWorld {
     struct ActorRange : private RawActorRange {
         ActorMap::iterator begin() const { return first; }
         ActorMap::iterator end() const { return second; }
-        ActorRange(RawActorRange const& p): RawActorRange(p) {}
+        ActorRange(RawActorRange const& p) : RawActorRange(p) {}
     };
-    ActorRange getActorsAt(Coord c) {
-        return actors.equal_range(c);
-    }
+    ActorRange getActorsAt(Coord c) { return actors.equal_range(c); }
 };
 
 
