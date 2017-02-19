@@ -33,3 +33,27 @@ void Anthill::doSomething() {
         // TODO Create new ant.
     }
 }
+
+void BabyGrassHopper::doSomething() {
+    if (!--m_currentEnergy) {
+        m_sw.insertActorAtEndOfTick<Food>(getCoord(), 100);
+        m_dead = true;
+        return;
+    }
+    if (m_sleep) {
+        --m_sleep;
+        return;
+    }
+    if (!m_distance) {
+        setDirection(static_cast<GraphObject::Direction>(randInt(up, left)));
+        m_distance = randInt(2, 10);
+    }
+    auto next = nextLocation();
+    if (attemptMove(next)) {
+        moveTo(next);
+        --m_distance;
+    } else {
+        m_distance = 0;
+    }
+    m_sleep = 2;
+    }

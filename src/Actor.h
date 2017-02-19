@@ -95,25 +95,7 @@ class BabyGrassHopper final : public EnergyHolder {
     BabyGrassHopper(StudentWorld& sw, Coord c)
       : EnergyHolder(500, sw, IID_BABY_GRASSHOPPER, c, static_cast<GraphObject::Direction>(randInt(up, left)), 1),
         m_distance(randInt(2, 10)), m_sleep(0) {}
-    virtual void doSomething() override {
-        --m_currentEnergy;
-        if (m_sleep) {
-            --m_sleep;
-            return;
-        }
-        if (!m_distance) {
-            setDirection(static_cast<GraphObject::Direction>(randInt(up, left)));
-            m_distance = randInt(2, 10);
-        }
-        auto next = nextLocation();
-        if (attemptMove(next)) {
-            moveTo(next);
-            --m_distance;
-        } else {
-            m_distance = 0;
-        }
-        m_sleep = 2;
-    }
+    virtual void doSomething() override;
     virtual int iid() const override { return IID_BABY_GRASSHOPPER; }
 
   private:
