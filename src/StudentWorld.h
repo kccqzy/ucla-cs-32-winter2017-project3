@@ -3,22 +3,20 @@
 
 #include "Actor.h"
 #include "Field.h"
-#include "GameConstants.h"
 #include "GameWorld.h"
-#include "GraphObject.h"
-#include <cassert>
 #include <map>
 #include <memory>
 #include <string>
 #include <utility>
 
-class StudentWorld : public GameWorld {
+class StudentWorld final : public GameWorld {
   private:
-    static std::pair<int, int> extractCoord(GraphObject const& go) {
-        return std::make_pair(go.getX(), go.getY());
-    }
-    typedef std::multimap<std::pair<int, int>, std::unique_ptr<Actor>> ActorMap;
+    typedef std::multimap<Coord, std::unique_ptr<Actor>> ActorMap;
+    typedef std::pair<ActorMap::iterator, ActorMap::iterator> RawActorRange;
     ActorMap actors;
+    int ticks;
+
+    static Coord extractCoord(GraphObject const& go) { return std::make_pair(go.getX(), go.getY()); }
 
     template <typename Actor, typename... Args>
     void insertActor(Args&&... args) {
@@ -27,17 +25,20 @@ class StudentWorld : public GameWorld {
     }
 
   public:
-    StudentWorld(std::string assetDir) : GameWorld(assetDir), actors{} {}
-
+    StudentWorld(std::string assetDir) : GameWorld(assetDir), actors{}, ticks(0) {}
     virtual int init();
+    virtual int move();
+    virtual void cleanUp();
 
-    virtual int move() {
-        // This code is here merely to allow the game to build, run, and terminate after you hit enter.
-        // Notice that the return value GWSTATUS_NO_WINNER will cause our framework to end the simulation.
-        return GWSTATUS_NO_WINNER;
+    struct ActorRange : private RawActorRange {
+        ActorMap::iterator begin() const { return first; }
+        ActorMap::iterator end() const { return second; }
+        ActorRange(RawActorRange const& p): RawActorRange(p) {}
+    };
+    ActorRange getActorsAt(Coord c) {
+        return actors.equal_range(c);
     }
-
-    virtual void cleanUp() { actors.clear(); }
 };
+
 
 #endif // STUDENTWORLD_H_
