@@ -50,9 +50,44 @@ class EnergyHolder : public Actor {
 };
 
 class Food final : public EnergyHolder {
-public:
-    Food(StudentWorld& sw, Coord c, int energy): EnergyHolder(energy, sw, IID_FOOD, c, right, 2) {}
+  public:
+    Food(StudentWorld& sw, Coord c, int energy) : EnergyHolder(energy, sw, IID_FOOD, c, right, 2) {}
     virtual int iid() const override { return IID_FOOD; }
+    int consumeAtMost(int howMuch) {
+        if (howMuch < m_currentEnergy) {
+            m_currentEnergy -= howMuch;
+            return howMuch;
+        } else {
+            int rv = m_currentEnergy;
+            m_currentEnergy = 0;
+            m_dead = true;
+            return rv;
+        }
+    }
+};
+
+class Pheremone final : public EnergyHolder {
+  public:
+    Pheremone(StudentWorld& sw, Coord c, int type)
+      : EnergyHolder(256, sw, typeToIID(type), c, right, 2), m_type(type) {}
+
+  private:
+    int m_type;
+    static int typeToIID(int type) { return IID_PHEROMONE_TYPE0 + type; }
+    virtual int iid() const override { return typeToIID(m_type); }
+    virtual void doSomething() override {
+        if (!--m_currentEnergy) m_dead = true;
+    }
+};
+
+class Anthill final : public EnergyHolder {
+  public:
+    Anthill(StudentWorld& sw, Coord c, int type) : EnergyHolder(8999, sw, IID_ANT_HILL, c, right, 2), m_type(type) {}
+
+  private:
+    int m_type;
+    virtual int iid() const override { return IID_ANT_HILL; }
+    virtual void doSomething() override;
 };
 
 class BabyGrassHopper final : public EnergyHolder {
