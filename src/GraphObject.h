@@ -26,10 +26,10 @@ class GraphObject
 		none, up, right, down, left	 // must be in this order
 	};
 
-	GraphObject(int imageID, int startX, int startY, Direction dir = right, double size = 1.0, unsigned int depth = 0)
+	GraphObject(int imageID, int startX, int startY, Direction dir = right, int depth = 0, double size = 0.25)
 	 : m_imageID(imageID), m_visible(false), m_x(startX), m_y(startY),
 	   m_destX(startX), m_destY(startY), m_brightness(1.0),
-	   m_animationNumber(0), m_direction(dir), m_size(size), m_depth(depth)
+	   m_animationNumber(0), m_direction(dir), m_depth(depth), m_size(size)
 	{
 		setVisible(true);
 
@@ -146,8 +146,8 @@ class GraphObject
 	double	m_brightness;
 	int		m_animationNumber;
 	Direction	m_direction;
-	double	m_size;
 	int		m_depth;
+	double	m_size;
 
 	void moveALittle(double& from, double& to)
 	{

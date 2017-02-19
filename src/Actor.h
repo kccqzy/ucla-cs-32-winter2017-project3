@@ -14,7 +14,7 @@ class Actor : public GraphObject {
     bool m_dead;
     StudentWorld& m_sw;
     Actor(StudentWorld& sw, int iid, Coord c, Direction dir, unsigned depth)
-      : GraphObject(iid, c.first, c.second, dir, 0.25, depth), m_dead(false), m_sw(sw) {}
+      : GraphObject(iid, c.first, c.second, dir, depth), m_dead(false), m_sw(sw) {}
     bool attemptMove(Coord c) const;
     Coord nextLocation() const {
         switch (getDirection()) {
