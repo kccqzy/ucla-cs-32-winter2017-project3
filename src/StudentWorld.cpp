@@ -18,6 +18,7 @@ int StudentWorld::init() {
                 switch (f.getContentsOf(x, y)) {
                 case Field::FieldItem::empty: break;
                 case Field::FieldItem::rock: insertActor<Pebble>(x, y); break;
+                case Field::FieldItem::grasshopper: insertActor<BabyGrassHopper>(x, y); break;
                 }
             }
         }
