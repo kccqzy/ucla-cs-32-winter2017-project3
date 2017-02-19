@@ -1,6 +1,8 @@
 #include "StudentWorld.h"
 #include "Actor.h"
 #include "Field.h"
+#include <algorithm>
+#include <cassert>
 #include <cstdio>
 #include <string>
 #include <vector>
@@ -10,6 +12,7 @@ GameWorld* createStudentWorld(std::string assetDir) { return new StudentWorld(as
 int StudentWorld::init() {
     actors.clear();
     newActors.clear();
+    antInfo.clear();
     {
         Field f;
         {
@@ -29,8 +32,14 @@ int StudentWorld::init() {
             }
         }
     }
-    ticks = 0;
 
+    {
+        auto antFns = getFilenamesOfAntPrograms();
+        if (antFns.size() > 4) antFns.resize(4);
+        for (size_t i = 0; i < antFns.size(); ++i) antInfo.emplace_back(antFns[i]);
+    }
+
+    ticks = 0;
     return GWSTATUS_CONTINUE_GAME;
 }
 
@@ -60,7 +69,7 @@ int StudentWorld::move() {
     for (auto& i : newActors) { actors.emplace(i->getCoord(), std::move(i)); }
     newActors.clear();
 
-    setGameStatText(std::to_string(ticks));
+    setStatusText();
     return ticks < 2000 ? GWSTATUS_CONTINUE_GAME : GWSTATUS_NO_WINNER;
 }
 
