@@ -26,8 +26,8 @@ protected:
         }
     }
     void moveTo(Coord c) { GraphObject::moveTo(c.first, c.second); }
-    int attemptConsumeAtMostFood(int maxEnergy);
-    void addFoodHere(int howMuch);
+    int attemptConsumeAtMostFood(int maxEnergy) const;
+    void addFoodHere(int howMuch) const;
 
 public:
     virtual ~Actor() {}

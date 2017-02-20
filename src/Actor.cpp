@@ -10,7 +10,7 @@ bool Actor::attemptMove(Coord c) const {
     return true;
 }
 
-int Actor::attemptConsumeAtMostFood(int maxEnergy) {
+int Actor::attemptConsumeAtMostFood(int maxEnergy) const {
     int totalFoodConsumed = 0;
     auto actorsHere = m_sw.getActorsAt(getCoord());
     for (auto const& actor : actorsHere) {
@@ -24,7 +24,7 @@ int Actor::attemptConsumeAtMostFood(int maxEnergy) {
     return totalFoodConsumed;
 }
 
-void Actor::addFoodHere(int howMuch) {
+void Actor::addFoodHere(int howMuch) const {
     auto here = getCoord();
     auto actorsHere = m_sw.getActorsAt(here);
     for (auto const& actor : actorsHere) {
