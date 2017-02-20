@@ -12,10 +12,9 @@ class StudentWorld;
 
 class Actor : public GraphObject {
 protected:
-    bool m_dead;
     StudentWorld& m_sw;
     Actor(StudentWorld& sw, int iid, Coord c, Direction dir, unsigned depth)
-      : GraphObject(iid, c.first, c.second, dir, depth), m_dead(false), m_sw(sw) {}
+      : GraphObject(iid, c.first, c.second, dir, depth), m_sw(sw) {}
     bool attemptMove(Coord c) const;
     Coord nextLocation() const {
         switch (getDirection()) {
@@ -28,13 +27,14 @@ protected:
     }
     void moveTo(Coord c) { GraphObject::moveTo(c.first, c.second); }
     int attemptConsumeAtMostFood(int maxEnergy);
+    void addFoodHere(int howMuch);
 
 public:
     virtual ~Actor() {}
     virtual void doSomething() {}
     virtual int iid() const = 0;
     Coord getCoord() const { return std::make_pair(getX(), getY()); }
-    bool isDead() const { return m_dead; }
+    virtual bool isDead() const { return false; } // TODO are non energyholders always not dead?
 };
 
 class Pebble final : public Actor {
@@ -49,12 +49,16 @@ protected:
     template<typename... Args>
     EnergyHolder(int initialEnergy, Args&&... args)
       : Actor(std::forward<Args>(args)...), m_currentEnergy{initialEnergy} {}
+
+public:
+    virtual bool isDead() const override { return !m_currentEnergy; }
 };
 
 class Food final : public EnergyHolder {
 public:
     Food(StudentWorld& sw, Coord c, int energy) : EnergyHolder(energy, sw, IID_FOOD, c, right, 2) {}
     virtual int iid() const override { return IID_FOOD; }
+    void increaseBy(int howMuch) { m_currentEnergy += howMuch; }
     int consumeAtMost(int howMuch) {
         if (howMuch < m_currentEnergy) {
             m_currentEnergy -= howMuch;
@@ -62,7 +66,6 @@ public:
         } else {
             int rv = m_currentEnergy;
             m_currentEnergy = 0;
-            m_dead = true;
             return rv;
         }
     }
@@ -77,9 +80,7 @@ private:
     int m_type;
     static int typeToIID(int type) { return IID_PHEROMONE_TYPE0 + type; }
     virtual int iid() const override { return typeToIID(m_type); }
-    virtual void doSomething() override {
-        if (!--m_currentEnergy) m_dead = true;
-    }
+    virtual void doSomething() override { --m_currentEnergy; }
 };
 
 class Anthill final : public EnergyHolder {

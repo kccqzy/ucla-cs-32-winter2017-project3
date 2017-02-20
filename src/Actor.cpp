@@ -18,17 +18,28 @@ int Actor::attemptConsumeAtMostFood(int maxEnergy) {
             Food& food = static_cast<Food&>(*actor.second);
             totalFoodConsumed += food.consumeAtMost(maxEnergy - totalFoodConsumed);
             assert(totalFoodConsumed <= maxEnergy);
-            if (totalFoodConsumed == maxEnergy) break;
+            break;
         }
     }
     return totalFoodConsumed;
 }
 
-void Anthill::doSomething() {
-    if (!--m_currentEnergy) {
-        m_dead = true;
-        return;
+void Actor::addFoodHere(int howMuch) {
+    auto here = getCoord();
+    auto actorsHere = m_sw.getActorsAt(here);
+    for (auto const& actor : actorsHere) {
+        if (actor.second->iid() == IID_FOOD) {
+            Food& food = static_cast<Food&>(*actor.second);
+            food.increaseBy(howMuch);
+            return;
+        }
     }
+    m_sw.insertActorAtEndOfTick<Food>(here, howMuch);
+}
+
+void Anthill::doSomething() {
+    if (!--m_currentEnergy) return;
+
     int totalFoodConsumed = attemptConsumeAtMostFood(10000);
     if (totalFoodConsumed) {
         m_currentEnergy += totalFoodConsumed;
@@ -41,8 +52,7 @@ void Anthill::doSomething() {
 
 void BabyGrassHopper::doSomething() {
     if (!--m_currentEnergy) { // Step 1, 2
-        m_sw.insertActorAtEndOfTick<Food>(getCoord(), 100);
-        m_dead = true;
+        addFoodHere(100);
         return;
     }
     if (m_sleep) { // Step 3, 4
