@@ -60,12 +60,12 @@ int StudentWorld::move() {
     ticks++;
 
     // Ask actors to doSomething.
-    std::vector<std::pair<Coord, ActorMap::iterator>> movedActors;
+    std::vector<std::pair<ActorKey, ActorMap::iterator>> movedActors;
     std::vector<ActorMap::iterator> deadActors;
     for (auto i = actors.begin(), ie = actors.end(); i != ie; ++i) {
-        auto oldLocation = i->second->getCoord();
+        auto oldLocation = i->second->getKey();
         if (!i->second->isDead()) i->second->doSomething();
-        auto newLocation = i->second->getCoord();
+        auto newLocation = i->second->getKey();
         if (i->second->isDead()) {
             deadActors.emplace_back(i);
         } else if (oldLocation != newLocation) {
@@ -79,7 +79,7 @@ int StudentWorld::move() {
         actors.erase(i.second);
         actors.emplace(i.first, std::move(val));
     }
-    for (auto& i : newActors) { actors.emplace(i->getCoord(), std::move(i)); }
+    for (auto& i : newActors) { actors.emplace(i->getKey(), std::move(i)); }
     newActors.clear();
 
     setStatusText();

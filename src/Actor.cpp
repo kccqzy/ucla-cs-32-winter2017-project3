@@ -3,36 +3,30 @@
 #include <cassert>
 
 bool Actor::attemptMove(Coord c) const {
-    auto actors = m_sw.getActorsAt(c);
-    for (auto const& actor : actors) {
-        if (actor.second->iid() == IID_ROCK) return false;
-    }
+    auto actors = m_sw.getActorsAt(c, IID_ROCK);
+    if (actors.begin() != actors.end()) return false;
     return true;
 }
 
 int Actor::attemptConsumeAtMostFood(int maxEnergy) const {
     int totalFoodConsumed = 0;
-    auto actorsHere = m_sw.getActorsAt(getCoord());
+    auto actorsHere = m_sw.getActorsAt(getCoord(), IID_FOOD);
     for (auto const& actor : actorsHere) {
-        if (actor.second->iid() == IID_FOOD) {
-            Food& food = static_cast<Food&>(*actor.second);
-            totalFoodConsumed += food.consumeAtMost(maxEnergy - totalFoodConsumed);
-            assert(totalFoodConsumed <= maxEnergy);
-            break;
-        }
+        Food& food = static_cast<Food&>(*actor.second);
+        totalFoodConsumed += food.consumeAtMost(maxEnergy - totalFoodConsumed);
+        assert(totalFoodConsumed <= maxEnergy);
+        break;
     }
     return totalFoodConsumed;
 }
 
 void Actor::addFoodHere(int howMuch) const {
     auto here = getCoord();
-    auto actorsHere = m_sw.getActorsAt(here);
+    auto actorsHere = m_sw.getActorsAt(here, IID_FOOD);
     for (auto const& actor : actorsHere) {
-        if (actor.second->iid() == IID_FOOD) {
-            Food& food = static_cast<Food&>(*actor.second);
-            food.increaseBy(howMuch);
-            return;
-        }
+        Food& food = static_cast<Food&>(*actor.second);
+        food.increaseBy(howMuch);
+        return;
     }
     m_sw.insertActorAtEndOfTick<Food>(here, howMuch);
 }

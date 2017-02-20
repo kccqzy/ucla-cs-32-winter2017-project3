@@ -5,8 +5,9 @@
 #include "GraphObject.h"
 #include <cassert>
 #include <utility>
+#include <tuple>
 
-typedef std::pair<int, int> Coord;
+typedef std::tuple<int, int> Coord;
 
 class StudentWorld;
 
@@ -14,7 +15,7 @@ class Actor : public GraphObject {
 protected:
     StudentWorld& m_sw;
     Actor(StudentWorld& sw, int iid, Coord c, Direction dir, unsigned depth)
-      : GraphObject(iid, c.first, c.second, dir, depth), m_sw(sw) {}
+        : GraphObject(iid, std::get<0>(c), std::get<1>(c), dir, depth), m_sw(sw) {}
     bool attemptMove(Coord c) const;
     Coord nextLocation() const {
         switch (getDirection()) {
@@ -25,7 +26,7 @@ protected:
         case Direction::right: return std::make_pair(getX() + 1, getY());
         }
     }
-    void moveTo(Coord c) { GraphObject::moveTo(c.first, c.second); }
+    void moveTo(Coord c) { GraphObject::moveTo(std::get<0>(c), std::get<1>(c)); }
     int attemptConsumeAtMostFood(int maxEnergy) const;
     void addFoodHere(int howMuch) const;
 
@@ -33,7 +34,8 @@ public:
     virtual ~Actor() {}
     virtual void doSomething() {}
     virtual int iid() const = 0;
-    Coord getCoord() const { return std::make_pair(getX(), getY()); }
+    Coord getCoord() const { return std::make_tuple(getX(), getY()); }
+    std::tuple<int, int, int> getKey() const { return std::make_tuple(getX(), getY(), iid()); }
     virtual bool isDead() const { return false; } // TODO are non energyholders always not dead?
 };
 

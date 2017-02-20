@@ -12,15 +12,45 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
-typedef std::pair<int, int> Coord;
+#if __cplusplus < 201402L
+# error "This file requires C++14."
+#endif
+
+typedef std::tuple<int, int> Coord;
 class Actor;
+
+template<std::size_t N>
+struct TupleComp {
+    // Induce an ordering on (potentially heterogeneous) tuples of possibly
+    // unequal sizes. The standard ordering on tuples require them to be of the
+    // same size, which is too restrictive. Instead, we model each element in an
+    // tuple as a sort key. Then for any two tuples of different sizes N and M,
+    // we consider them to be separate equivalence relations. Then obviously
+    // whenever N>M, the equivalence relation induced by the tuple N is a
+    // refinement, because each individual item in the tuple creates a finer
+    // partition.
+    template<typename... T, typename... U, std::size_t... I>
+    bool operator()(std::tuple<T...> const& a, std::tuple<U...> const& b, std::index_sequence<I...>) const {
+        return std::make_tuple(std::get<I>(a)...) < std::make_tuple(std::get<I>(b)...);
+    }
+    template<typename... T, typename... U,
+             typename Indices = std::make_index_sequence<std::min(sizeof...(T), sizeof...(U))>>
+    bool operator()(std::tuple<T...> const& a, std::tuple<U...> const& b) const {
+        static_assert(sizeof...(T) == N || sizeof...(U) == N, "at least one tuple shall be full size");
+        static_assert(sizeof...(T) <= N && sizeof...(U) <= N, "both tuples shall be no longer than full size");
+        return operator()(a, b, Indices());
+    }
+    typedef bool is_transparent;
+};
 
 class StudentWorld final : public GameWorld {
 private:
-    typedef std::multimap<Coord, std::unique_ptr<Actor>> ActorMap;
+    typedef std::tuple<int, int, int> ActorKey;
+    typedef std::multimap<ActorKey, std::unique_ptr<Actor>, TupleComp<std::tuple_size<ActorKey>::value>> ActorMap;
     typedef std::pair<ActorMap::iterator, ActorMap::iterator> RawActorRange;
 
     ActorMap actors;
@@ -40,7 +70,7 @@ private:
     template<typename Actor, typename... Args>
     void insertActor(int x, int y, Args&&... args) {
         auto p = std::make_unique<Actor>(*this, std::make_pair(x, y), std::forward<Args>(args)...);
-        actors.emplace(p->getCoord(), std::move(p));
+        actors.emplace(p->getKey(), std::move(p));
     }
 
     void setStatusText() {
@@ -71,7 +101,11 @@ public:
         ActorMap::iterator end() const { return second; }
         ActorRange(RawActorRange const& p) : RawActorRange(p) {}
     };
-    ActorRange getActorsAt(Coord c) { return actors.equal_range(c); }
+    template<typename CoordOrKey>
+    ActorRange getActorsAt(CoordOrKey c) {
+        return actors.equal_range(c);
+    }
+    ActorRange getActorsAt(Coord c, int iid) { return getActorsAt(std::tuple_cat(c, std::make_tuple(iid))); }
 
     template<typename Actor, typename... Args>
     void insertActorAtEndOfTick(Args&&... args) {
