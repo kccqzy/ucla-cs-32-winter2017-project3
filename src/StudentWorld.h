@@ -2,9 +2,11 @@
 #define STUDENTWORLD_H_
 
 #include "Actor.h"
+#include "Compiler.h"
 #include "Field.h"
 #include "GameWorld.h"
 #include <algorithm>
+#include <array>
 #include <iomanip>
 #include <map>
 #include <memory>
@@ -17,22 +19,29 @@ class StudentWorld final : public GameWorld {
 private:
     typedef std::multimap<Coord, std::unique_ptr<Actor>> ActorMap;
     typedef std::pair<ActorMap::iterator, ActorMap::iterator> RawActorRange;
+
     ActorMap actors;
     int ticks;
     std::vector<std::unique_ptr<Actor>> newActors;
 
-    struct AntInfo {
+    struct AntColonyInfo {
         std::string name;
+        Compiler compiler;
         int antCount;
-        AntInfo(std::string const& name) : name(name), antCount(0) {}
-        friend bool operator<(AntInfo const& a, AntInfo const& b) { return a.antCount < b.antCount; }
+        AntColonyInfo(std::string const& name, Compiler&& compiler)
+          : name(name), compiler(std::move(compiler)), antCount(0) {}
+        friend bool operator<(AntColonyInfo const& a, AntColonyInfo const& b) { return a.antCount < b.antCount; }
     };
-    std::vector<AntInfo> antInfo;
+    std::vector<AntColonyInfo> antInfo;
 
     template<typename Actor, typename... Args>
     void insertActor(int x, int y, Args&&... args) {
         auto p = std::make_unique<Actor>(*this, std::make_pair(x, y), std::forward<Args>(args)...);
         actors.emplace(p->getCoord(), std::move(p));
+    }
+
+    void insertAnthill(int x, int y, int t) {
+        if (t < (int) antInfo.size()) { insertActor<Anthill>(x, y, t, antInfo[t].compiler); }
     }
 
     void setStatusText() {

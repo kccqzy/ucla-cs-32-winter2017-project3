@@ -1,5 +1,6 @@
 #include "StudentWorld.h"
 #include "Actor.h"
+#include "Compiler.h"
 #include "Field.h"
 #include <algorithm>
 #include <cassert>
@@ -10,14 +11,25 @@
 GameWorld* createStudentWorld(std::string assetDir) { return new StudentWorld(assetDir); }
 
 int StudentWorld::init() {
-    actors.clear();
-    newActors.clear();
-    antInfo.clear();
+    StudentWorld::cleanUp();
+
+    auto antFns = getFilenamesOfAntPrograms();
+    if (antFns.size() > 4) antFns.resize(4);
+    for (auto const& fn : antFns) {
+        Compiler c;
+        std::string e;
+        if (c.compile(fn, e)) {
+            antInfo.emplace_back(c.getColonyName(), std::move(c));
+        } else {
+            setError(fn + " " + e);
+            return GWSTATUS_LEVEL_ERROR;
+        }
+    }
+
     {
         Field f;
         {
             std::string fieldFileName = this->getFieldFilename();
-            fprintf(stderr, "Attempting to load file %s as field data.\n", fieldFileName.c_str());
             auto loadResult = f.loadField(fieldFileName);
             if (loadResult != Field::LoadResult::load_success) { return GWSTATUS_LEVEL_ERROR; }
         }
@@ -28,15 +40,13 @@ int StudentWorld::init() {
                 case Field::FieldItem::rock: insertActor<Pebble>(x, y); break;
                 case Field::FieldItem::grasshopper: insertActor<BabyGrassHopper>(x, y); break;
                 case Field::FieldItem::food: insertActor<Food>(x, y, 6000); break;
+                case Field::FieldItem::anthill0: insertAnthill(x, y, 0); break;
+                case Field::FieldItem::anthill1: insertAnthill(x, y, 1); break;
+                case Field::FieldItem::anthill2: insertAnthill(x, y, 2); break;
+                case Field::FieldItem::anthill3: insertAnthill(x, y, 3); break;
                 }
             }
         }
-    }
-
-    {
-        auto antFns = getFilenamesOfAntPrograms();
-        if (antFns.size() > 4) antFns.resize(4);
-        for (size_t i = 0; i < antFns.size(); ++i) antInfo.emplace_back(antFns[i]);
     }
 
     ticks = 0;
@@ -76,4 +86,5 @@ int StudentWorld::move() {
 void StudentWorld::cleanUp() {
     actors.clear();
     newActors.clear();
+    antInfo.clear();
 }

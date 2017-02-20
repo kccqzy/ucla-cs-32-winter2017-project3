@@ -1,6 +1,7 @@
 #ifndef ACTOR_H_
 #define ACTOR_H_
 
+#include "Compiler.h"
 #include "GraphObject.h"
 #include <cassert>
 #include <utility>
@@ -83,9 +84,11 @@ private:
 
 class Anthill final : public EnergyHolder {
 public:
-    Anthill(StudentWorld& sw, Coord c, int type) : EnergyHolder(8999, sw, IID_ANT_HILL, c, right, 2), m_type(type) {}
+    Anthill(StudentWorld& sw, Coord c, int type, Compiler const& comp)
+      : EnergyHolder(8999, sw, IID_ANT_HILL, c, right, 2), m_comp(comp), m_type(type) {}
 
 private:
+    Compiler const& m_comp;
     int m_type;
     virtual int iid() const override { return IID_ANT_HILL; }
     virtual void doSomething() override;
