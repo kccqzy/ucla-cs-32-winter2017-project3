@@ -1,12 +1,12 @@
 #ifndef STUDENTWORLD_H_
 #define STUDENTWORLD_H_
 
-#include "Actor.h"
 #include "Compiler.h"
 #include "Field.h"
 #include "GameWorld.h"
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <iomanip>
 #include <map>
 #include <memory>
@@ -14,6 +14,9 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+typedef std::pair<int, int> Coord;
+class Actor;
 
 class StudentWorld final : public GameWorld {
 private:
@@ -38,10 +41,6 @@ private:
     void insertActor(int x, int y, Args&&... args) {
         auto p = std::make_unique<Actor>(*this, std::make_pair(x, y), std::forward<Args>(args)...);
         actors.emplace(p->getCoord(), std::move(p));
-    }
-
-    void insertAnthill(int x, int y, int t) {
-        if (t < (int) antInfo.size()) { insertActor<Anthill>(x, y, t, antInfo[t].compiler); }
     }
 
     void setStatusText() {

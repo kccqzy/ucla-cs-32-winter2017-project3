@@ -27,10 +27,10 @@ GameController.o: src/GameController.cpp src/freeglut.h \
 GameWorld.o: src/GameWorld.cpp src/GameWorld.h src/GameConstants.h \
   src/GameController.h src/SpriteManager.h src/freeglut.h \
   src/freeglut_std.h src/freeglut_ext.h
-StudentWorld.o: src/StudentWorld.cpp src/StudentWorld.h src/Actor.h \
-  src/Compiler.h src/GameConstants.h src/GraphObject.h \
-  src/SpriteManager.h src/freeglut.h src/freeglut_std.h \
-  src/freeglut_ext.h src/Field.h src/GameWorld.h
+StudentWorld.o: src/StudentWorld.cpp src/StudentWorld.h src/Compiler.h \
+  src/GameConstants.h src/Field.h src/GameWorld.h src/Actor.h \
+  src/GraphObject.h src/SpriteManager.h src/freeglut.h \
+  src/freeglut_std.h src/freeglut_ext.h
 main.o: src/main.cpp src/GameController.h src/SpriteManager.h \
   src/freeglut.h src/freeglut_std.h src/freeglut_ext.h \
   src/GameConstants.h

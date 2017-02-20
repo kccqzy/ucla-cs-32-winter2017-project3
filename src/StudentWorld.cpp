@@ -35,6 +35,9 @@ int StudentWorld::init() {
         }
         for (int x = 0; x < VIEW_WIDTH; ++x) {
             for (int y = 0; y < VIEW_HEIGHT; ++y) {
+                auto insertAnthill = [this] (int x, int y, int t) {
+                    if (t < (int) antInfo.size()) insertActor<Anthill>(x, y, t, antInfo[t].compiler);
+                };
                 switch (f.getContentsOf(x, y)) {
                 case Field::FieldItem::empty: break;
                 case Field::FieldItem::rock: insertActor<Pebble>(x, y); break;
