@@ -4,8 +4,8 @@
 #include "Compiler.h"
 #include "GraphObject.h"
 #include <cassert>
-#include <utility>
 #include <tuple>
+#include <utility>
 
 typedef std::tuple<int, int> Coord;
 
@@ -15,7 +15,7 @@ class Actor : public GraphObject {
 protected:
     StudentWorld& m_sw;
     Actor(StudentWorld& sw, int iid, Coord c, Direction dir, unsigned depth)
-        : GraphObject(iid, std::get<0>(c), std::get<1>(c), dir, depth), m_sw(sw) {}
+      : GraphObject(iid, std::get<0>(c), std::get<1>(c), dir, depth), m_sw(sw) {}
     bool attemptMove(Coord c) const;
     Coord nextLocation() const {
         switch (getDirection()) {
@@ -97,28 +97,45 @@ private:
     virtual void doSomething() override;
 };
 
-class BabyGrassHopper final : public EnergyHolder {
-public:
-    BabyGrassHopper(StudentWorld& sw, Coord c)
-      : EnergyHolder(500, sw, IID_BABY_GRASSHOPPER, c, static_cast<GraphObject::Direction>(randInt(up, left)), 1),
-        m_distance(randInt(2, 10)), m_sleep(0) {}
-    virtual void doSomething() override;
-    virtual int iid() const override { return IID_BABY_GRASSHOPPER; }
-
-private:
-    int m_distance, m_sleep;
+class Insect : public EnergyHolder {
+protected:
+    Insect(int initialEnergy, StudentWorld& sw, int iid, Coord c)
+      : EnergyHolder(initialEnergy, sw, iid, c, static_cast<GraphObject::Direction>(randInt(up, left)), 1), m_sleep(0) {
+    }
+    int m_sleep;
+    bool burnEnergyAndSleep() {
+        if (!--m_currentEnergy) { // Step 1, 2
+            addFoodHere(100);
+            return false;
+        }
+        if (m_sleep) { // Step 3, 4
+            --m_sleep;
+            return false;
+        }
+        return true;
+    }
 };
 
-class AdultGrassHopper final : public EnergyHolder {
+class GrassHopper : public Insect {
+protected:
+    template<typename... Args>
+    GrassHopper(Args&&... args) : Insect(std::forward<Args>(args)...), m_distance(randInt(2, 10)) {}
+    int m_distance;
+    void consumeFoodAndMove();
+};
+
+class BabyGrassHopper final : public GrassHopper {
 public:
-    AdultGrassHopper(StudentWorld& sw, Coord c)
-        : EnergyHolder(1600, sw, IID_ADULT_GRASSHOPPER, c, static_cast<GraphObject::Direction>(randInt(up, left)), 1),
-          m_distance(randInt(2, 10)), m_sleep(0) {}
+    BabyGrassHopper(StudentWorld& sw, Coord c) : GrassHopper(500, sw, IID_BABY_GRASSHOPPER, c) {}
+    virtual void doSomething() override;
+    virtual int iid() const override { return IID_BABY_GRASSHOPPER; }
+};
+
+class AdultGrassHopper final : public GrassHopper {
+public:
+    AdultGrassHopper(StudentWorld& sw, Coord c) : GrassHopper(1600, sw, IID_ADULT_GRASSHOPPER, c) {}
     virtual void doSomething() override;
     virtual int iid() const override { return IID_ADULT_GRASSHOPPER; }
-
-private:
-    int m_distance, m_sleep;
 };
 
 #endif // ACTOR_H_

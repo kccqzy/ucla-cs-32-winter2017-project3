@@ -44,70 +44,41 @@ void Anthill::doSomething() {
     }
 }
 
+void GrassHopper::consumeFoodAndMove() {
+    if (int consumedFood = attemptConsumeAtMostFood(200)) { // Step 6 (baby) or 7 (adult)
+        m_currentEnergy += consumedFood;
+        if (randInt(0, 1)) { // Step 7 (baby) or 8 (adult)
+            m_sleep = 2;
+            return;
+        }
+    }
+    if (!m_distance) { // Step 8 (baby) or 8 (adult)
+        setDirection(static_cast<GraphObject::Direction>(randInt(up, left)));
+        m_distance = randInt(2, 10);
+    }
+    auto next = nextLocation();
+    if (attemptMove(next)) { // Step 9 (baby) or 10 (adult)
+        moveTo(next);
+        --m_distance; // Step 11 (baby) or 12 (adult)
+    } else {          // Step 10 (baby) or 11 (adult)
+        m_distance = 0;
+    }
+    m_sleep = 2; // Step 12 (baby) or 13 (adult)
+}
+
 void BabyGrassHopper::doSomething() {
-    if (!--m_currentEnergy) { // Step 1, 2
-        addFoodHere(100);
-        return;
-    }
-    if (m_sleep) { // Step 3, 4
-        --m_sleep;
-        return;
-    }
-    if (m_currentEnergy >= 1600) { // Step 5
+    if (!burnEnergyAndSleep()) return; // Step 1--4
+    if (m_currentEnergy >= 1600) {     // Step 5
         addFoodHere(100);
         m_sw.insertActorAtEndOfTick<AdultGrassHopper>(getCoord());
         m_currentEnergy = 0;
     }
-    if (int consumedFood = attemptConsumeAtMostFood(200)) { // Step 6
-        m_currentEnergy += consumedFood;
-        if (randInt(0, 1)) {    // Step 7
-            m_sleep = 2;
-            return;
-        }
-    }
-    if (!m_distance) { // Step 8
-        setDirection(static_cast<GraphObject::Direction>(randInt(up, left)));
-        m_distance = randInt(2, 10);
-    }
-    auto next = nextLocation();
-    if (attemptMove(next)) { // Step 9
-        moveTo(next);
-        --m_distance; // Step 11
-    } else {          // Step 10
-        m_distance = 0;
-    }
-    m_sleep = 2; // Step 12
+    consumeFoodAndMove(); // Steps 6--12
 }
 
 void AdultGrassHopper::doSomething() {
-    if (!--m_currentEnergy) { // Step 1, 2
-        addFoodHere(100);
-        return;
-    }
-    if (m_sleep) { // Step 3, 4
-        --m_sleep;
-        return;
-    }
+    if (!burnEnergyAndSleep()) return; // Step 1--4
     // TODO Step 5
     // TODO Step 6
-    if (int consumedFood = attemptConsumeAtMostFood(200)) { // Step 6
-        m_currentEnergy += consumedFood;
-        if (randInt(0, 1)) {    // Step 7
-            m_sleep = 2;
-            return;
-        }
-    }
-    if (!m_distance) { // Step 9
-        setDirection(static_cast<GraphObject::Direction>(randInt(up, left)));
-        m_distance = randInt(2, 10);
-    }
-    auto next = nextLocation();
-    if (attemptMove(next)) { // Step 10
-        moveTo(next);
-        --m_distance; // Step 12
-    } else {          // Step 11
-        m_distance = 0;
-    }
-    m_sleep = 2; // Step 13
-
+    consumeFoodAndMove(); // Steps 7--13
 }
