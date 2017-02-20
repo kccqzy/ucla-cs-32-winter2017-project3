@@ -54,11 +54,16 @@ void BabyGrassHopper::doSomething() {
         return;
     }
     if (m_currentEnergy >= 1600) { // Step 5
-        // TODO become AdultGrasshopper
+        addFoodHere(100);
+        m_sw.insertActorAtEndOfTick<AdultGrassHopper>(getCoord());
+        m_currentEnergy = 0;
     }
-    if (attemptConsumeAtMostFood(200) && randInt(0, 1)) { // Step 6, 7
-        m_sleep = 2;
-        return;
+    if (int consumedFood = attemptConsumeAtMostFood(200)) { // Step 6
+        m_currentEnergy += consumedFood;
+        if (randInt(0, 1)) {    // Step 7
+            m_sleep = 2;
+            return;
+        }
     }
     if (!m_distance) { // Step 8
         setDirection(static_cast<GraphObject::Direction>(randInt(up, left)));
@@ -72,4 +77,37 @@ void BabyGrassHopper::doSomething() {
         m_distance = 0;
     }
     m_sleep = 2; // Step 12
+}
+
+void AdultGrassHopper::doSomething() {
+    if (!--m_currentEnergy) { // Step 1, 2
+        addFoodHere(100);
+        return;
+    }
+    if (m_sleep) { // Step 3, 4
+        --m_sleep;
+        return;
+    }
+    // TODO Step 5
+    // TODO Step 6
+    if (int consumedFood = attemptConsumeAtMostFood(200)) { // Step 6
+        m_currentEnergy += consumedFood;
+        if (randInt(0, 1)) {    // Step 7
+            m_sleep = 2;
+            return;
+        }
+    }
+    if (!m_distance) { // Step 9
+        setDirection(static_cast<GraphObject::Direction>(randInt(up, left)));
+        m_distance = randInt(2, 10);
+    }
+    auto next = nextLocation();
+    if (attemptMove(next)) { // Step 10
+        moveTo(next);
+        --m_distance; // Step 12
+    } else {          // Step 11
+        m_distance = 0;
+    }
+    m_sleep = 2; // Step 13
+
 }

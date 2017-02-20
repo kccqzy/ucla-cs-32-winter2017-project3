@@ -109,4 +109,16 @@ private:
     int m_distance, m_sleep;
 };
 
+class AdultGrassHopper final : public EnergyHolder {
+public:
+    AdultGrassHopper(StudentWorld& sw, Coord c)
+        : EnergyHolder(1600, sw, IID_ADULT_GRASSHOPPER, c, static_cast<GraphObject::Direction>(randInt(up, left)), 1),
+          m_distance(randInt(2, 10)), m_sleep(0) {}
+    virtual void doSomething() override;
+    virtual int iid() const override { return IID_ADULT_GRASSHOPPER; }
+
+private:
+    int m_distance, m_sleep;
+};
+
 #endif // ACTOR_H_
