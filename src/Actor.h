@@ -10,7 +10,7 @@ typedef std::pair<int, int> Coord;
 class StudentWorld;
 
 class Actor : public GraphObject {
-  protected:
+protected:
     bool m_dead;
     StudentWorld& m_sw;
     Actor(StudentWorld& sw, int iid, Coord c, Direction dir, unsigned depth)
@@ -28,7 +28,7 @@ class Actor : public GraphObject {
     void moveTo(Coord c) { GraphObject::moveTo(c.first, c.second); }
     int attemptConsumeAtMostFood(int maxEnergy);
 
-  public:
+public:
     virtual ~Actor() {}
     virtual void doSomething() {}
     virtual int iid() const = 0;
@@ -37,21 +37,21 @@ class Actor : public GraphObject {
 };
 
 class Pebble final : public Actor {
-  public:
+public:
     Pebble(StudentWorld& sw, Coord c) : Actor(sw, IID_ROCK, c, right, 1) {}
     virtual int iid() const override { return IID_ROCK; }
 };
 
 class EnergyHolder : public Actor {
-  protected:
+protected:
     int m_currentEnergy;
-    template <typename... Args>
+    template<typename... Args>
     EnergyHolder(int initialEnergy, Args&&... args)
       : Actor(std::forward<Args>(args)...), m_currentEnergy{initialEnergy} {}
 };
 
 class Food final : public EnergyHolder {
-  public:
+public:
     Food(StudentWorld& sw, Coord c, int energy) : EnergyHolder(energy, sw, IID_FOOD, c, right, 2) {}
     virtual int iid() const override { return IID_FOOD; }
     int consumeAtMost(int howMuch) {
@@ -68,11 +68,11 @@ class Food final : public EnergyHolder {
 };
 
 class Pheremone final : public EnergyHolder {
-  public:
+public:
     Pheremone(StudentWorld& sw, Coord c, int type)
       : EnergyHolder(256, sw, typeToIID(type), c, right, 2), m_type(type) {}
 
-  private:
+private:
     int m_type;
     static int typeToIID(int type) { return IID_PHEROMONE_TYPE0 + type; }
     virtual int iid() const override { return typeToIID(m_type); }
@@ -82,26 +82,25 @@ class Pheremone final : public EnergyHolder {
 };
 
 class Anthill final : public EnergyHolder {
-  public:
+public:
     Anthill(StudentWorld& sw, Coord c, int type) : EnergyHolder(8999, sw, IID_ANT_HILL, c, right, 2), m_type(type) {}
 
-  private:
+private:
     int m_type;
     virtual int iid() const override { return IID_ANT_HILL; }
     virtual void doSomething() override;
 };
 
 class BabyGrassHopper final : public EnergyHolder {
-  public:
+public:
     BabyGrassHopper(StudentWorld& sw, Coord c)
       : EnergyHolder(500, sw, IID_BABY_GRASSHOPPER, c, static_cast<GraphObject::Direction>(randInt(up, left)), 1),
         m_distance(randInt(2, 10)), m_sleep(0) {}
     virtual void doSomething() override;
     virtual int iid() const override { return IID_BABY_GRASSHOPPER; }
 
-  private:
+private:
     int m_distance, m_sleep;
 };
-
 
 #endif // ACTOR_H_

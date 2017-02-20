@@ -4,17 +4,17 @@
 #include "Actor.h"
 #include "Field.h"
 #include "GameWorld.h"
+#include <algorithm>
+#include <iomanip>
 #include <map>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
-#include <sstream>
-#include <iomanip>
-#include <algorithm>
 
 class StudentWorld final : public GameWorld {
-  private:
+private:
     typedef std::multimap<Coord, std::unique_ptr<Actor>> ActorMap;
     typedef std::pair<ActorMap::iterator, ActorMap::iterator> RawActorRange;
     ActorMap actors;
@@ -24,12 +24,12 @@ class StudentWorld final : public GameWorld {
     struct AntInfo {
         std::string name;
         int antCount;
-        AntInfo(std::string const& name): name(name), antCount(0) {}
+        AntInfo(std::string const& name) : name(name), antCount(0) {}
         friend bool operator<(AntInfo const& a, AntInfo const& b) { return a.antCount < b.antCount; }
     };
     std::vector<AntInfo> antInfo;
 
-    template <typename Actor, typename... Args>
+    template<typename Actor, typename... Args>
     void insertActor(int x, int y, Args&&... args) {
         auto p = std::make_unique<Actor>(*this, std::make_pair(x, y), std::forward<Args>(args)...);
         actors.emplace(p->getCoord(), std::move(p));
@@ -52,7 +52,7 @@ class StudentWorld final : public GameWorld {
         setGameStatText(oss.str());
     }
 
-  public:
+public:
     StudentWorld(std::string assetDir) : GameWorld(assetDir), actors{}, ticks(0), newActors{}, antInfo{} {}
     virtual int init();
     virtual int move();
@@ -65,11 +65,10 @@ class StudentWorld final : public GameWorld {
     };
     ActorRange getActorsAt(Coord c) { return actors.equal_range(c); }
 
-    template <typename Actor, typename... Args>
+    template<typename Actor, typename... Args>
     void insertActorAtEndOfTick(Args&&... args) {
         newActors.emplace_back(std::make_unique<Actor>(*this, std::forward<Args>(args)...));
     }
 };
-
 
 #endif // STUDENTWORLD_H_
