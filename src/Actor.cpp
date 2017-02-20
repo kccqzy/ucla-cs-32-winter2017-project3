@@ -9,25 +9,15 @@ bool Actor::attemptMove(Coord c) const {
 }
 
 int Actor::attemptConsumeAtMostFood(int maxEnergy) const {
-    int totalFoodConsumed = 0;
     auto actorsHere = m_sw.getActorsAt(getCoord(), IID_FOOD);
-    for (auto const& actor : actorsHere) {
-        Food& food = static_cast<Food&>(*actor.second);
-        totalFoodConsumed += food.consumeAtMost(maxEnergy - totalFoodConsumed);
-        assert(totalFoodConsumed <= maxEnergy);
-        break;
-    }
-    return totalFoodConsumed;
+    for (auto const& actor : actorsHere) return static_cast<Food&>(*actor.second).consumeAtMost(maxEnergy);
+    return 0;
 }
 
 void Actor::addFoodHere(int howMuch) const {
     auto here = getCoord();
     auto actorsHere = m_sw.getActorsAt(here, IID_FOOD);
-    for (auto const& actor : actorsHere) {
-        Food& food = static_cast<Food&>(*actor.second);
-        food.increaseBy(howMuch);
-        return;
-    }
+    for (auto const& actor : actorsHere) return static_cast<Food&>(*actor.second).increaseBy(howMuch);
     m_sw.insertActorAtEndOfTick<Food>(here, howMuch);
 }
 
