@@ -17,7 +17,7 @@
 #include <vector>
 
 #if __cplusplus < 201402L
-# error "This file requires C++14."
+#error "This file requires C++14."
 #endif
 
 typedef std::tuple<int, int> Coord;
@@ -105,7 +105,7 @@ public:
     ActorRange getActorsAt(CoordOrKey c) {
         return actors.equal_range(c);
     }
-    ActorRange getActorsAt(Coord c, int iid) { return getActorsAt(std::tuple_cat(c, std::make_tuple(iid))); }
+    ActorRange getActorsAt(Coord c, int iid) { return actors.equal_range(std::tuple_cat(c, std::make_tuple(iid))); }
 
     template<typename Actor, typename... Args>
     void insertActorAtEndOfTick(Args&&... args) {
