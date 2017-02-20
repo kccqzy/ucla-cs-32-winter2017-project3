@@ -35,7 +35,7 @@ int StudentWorld::init() {
         }
         for (int x = 0; x < VIEW_WIDTH; ++x) {
             for (int y = 0; y < VIEW_HEIGHT; ++y) {
-                auto insertAnthill = [this] (int x, int y, int t) {
+                auto insertAnthill = [this](int x, int y, int t) {
                     if (t < (int) antInfo.size()) insertActor<Anthill>(x, y, t, antInfo[t].compiler);
                 };
                 switch (f.getContentsOf(x, y)) {
@@ -73,7 +73,8 @@ int StudentWorld::move() {
         }
     }
     // Remove dead, move moved, and add new actors.
-    for (auto const& i : deadActors) actors.erase(i);
+    for (auto const& i : deadActors)
+        if (i->second->isDead()) actors.erase(i);
     for (auto const& i : movedActors) {
         auto val = std::move(i.second->second);
         actors.erase(i.second);
