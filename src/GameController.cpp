@@ -237,12 +237,14 @@ void GameController::doSomething()
 		case gameoverwinner:
 			m_mainMessage = " Winning Ant: " + m_gw->getWinnerName() + "!";
 			m_secondMessage = "Press Enter to quit...";
+			m_gw->cleanUp();
 			setGameState(prompt);
 			m_nextStateAfterPrompt = quit;
 			break;
 		case gameovernowinner:
 			m_mainMessage = "No winning ant!";
 			m_secondMessage = "Press Enter to quit...";
+			m_gw->cleanUp();
 			setGameState(prompt);
 			m_nextStateAfterPrompt = quit;
 			break;
