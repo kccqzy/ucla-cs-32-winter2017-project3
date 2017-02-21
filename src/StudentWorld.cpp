@@ -58,21 +58,23 @@ int StudentWorld::init() {
 
 int StudentWorld::move() {
     ticks++;
+    newActors.clear();
 
     // Ask actors to doSomething.
+    for (auto const& i : actors)
+        if (!i.second->isDead()) i.second->doSomething();
+
+    // Remove dead, move moved, and add new actors.
     std::vector<std::pair<ActorKey, ActorMap::iterator>> movedActors;
-    std::vector<ActorMap::iterator> deadActors;
+    std::vector<ActorMap::const_iterator> deadActors;
     for (auto i = actors.begin(), ie = actors.end(); i != ie; ++i) {
-        auto oldLocation = i->second->getKey();
-        if (!i->second->isDead()) i->second->doSomething();
-        auto newLocation = i->second->getKey();
         if (i->second->isDead()) {
             deadActors.emplace_back(i);
-        } else if (oldLocation != newLocation) {
-            movedActors.emplace_back(newLocation, i);
+        } else {
+            auto newLocation = i->second->getKey();
+            if (i->first != newLocation) { movedActors.emplace_back(newLocation, i); }
         }
     }
-    // Remove dead, move moved, and add new actors.
     for (auto const& i : deadActors)
         if (i->second->isDead()) actors.erase(i);
     for (auto const& i : movedActors) {
