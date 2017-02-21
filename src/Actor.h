@@ -16,7 +16,7 @@ protected:
     StudentWorld& m_sw;
     Actor(StudentWorld& sw, int iid, Coord c, Direction dir, unsigned depth)
       : GraphObject(iid, std::get<0>(c), std::get<1>(c), dir, depth), m_sw(sw) {}
-    bool attemptMove(Coord c) const;
+    bool canMoveHere(Coord c) const;
     Coord nextLocation() const {
         switch (getDirection()) {
         case Direction::none: assert(false && "Unexpected direction: none");
@@ -136,6 +136,8 @@ public:
     AdultGrassHopper(StudentWorld& sw, Coord c) : GrassHopper(1600, sw, IID_ADULT_GRASSHOPPER, c) {}
     virtual void doSomething() override;
     virtual int iid() const override { return IID_ADULT_GRASSHOPPER; }
+private:
+    std::vector<Coord> findOpenSquaresCenteredHere() const;
 };
 
 #endif // ACTOR_H_

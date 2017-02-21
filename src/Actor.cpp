@@ -2,7 +2,7 @@
 #include "StudentWorld.h"
 #include <cassert>
 
-bool Actor::attemptMove(Coord c) const {
+bool Actor::canMoveHere(Coord c) const {
     auto actors = m_sw.getActorsAt(c, IID_ROCK);
     if (actors.begin() != actors.end()) return false;
     return true;
@@ -47,7 +47,7 @@ void GrassHopper::consumeFoodAndMove() {
         m_distance = randInt(2, 10);
     }
     auto next = nextLocation();
-    if (attemptMove(next)) { // Step 9 (baby) or 10 (adult)
+    if (canMoveHere(next)) { // Step 9 (baby) or 10 (adult)
         moveTo(next);
         --m_distance; // Step 11 (baby) or 12 (adult)
     } else {          // Step 10 (baby) or 11 (adult)
@@ -69,6 +69,26 @@ void BabyGrassHopper::doSomething() {
 void AdultGrassHopper::doSomething() {
     if (!burnEnergyAndSleep()) return; // Step 1--4
     // TODO Step 5
-    // TODO Step 6
+    if (!randInt(0, 9)) { // Step 6
+        auto openSquares = findOpenSquaresCenteredHere();
+        if (!openSquares.empty()) {
+            moveTo(openSquares[randInt(0, openSquares.size() - 1)]);
+            m_sleep = 2;
+            return;
+        }
+    }
     consumeFoodAndMove(); // Steps 7--13
+}
+
+std::vector<Coord> AdultGrassHopper::findOpenSquaresCenteredHere() const {
+    int const radius = 10;
+    std::vector<Coord> rv;
+    int x0 = getX(), y0 = getY();
+    int minX = std::max(1, x0 - radius), minY = std::max(1, x0 - radius);
+    int maxX = std::min(VIEW_WIDTH - 2, x0 + radius), maxY = std::min(VIEW_HEIGHT - 2, y0 + radius);
+    for (int x = minX; x <= maxX; ++x)
+        for (int y = minY; y <= maxY; ++y)
+            if ((x - x0) * (x - x0) + (y - y0) * (y - y0) <= radius * radius && canMoveHere({x, y}))
+                rv.emplace_back(x, y);
+    return rv;
 }

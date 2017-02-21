@@ -92,9 +92,9 @@ private:
 
 public:
     StudentWorld(std::string assetDir) : GameWorld(assetDir), actors{}, ticks(0), newActors{}, antInfo{} {}
-    virtual int init();
-    virtual int move();
-    virtual void cleanUp();
+    virtual int init() override;
+    virtual int move() override;
+    virtual void cleanUp() override;
 
     struct ActorRange : private RawActorRange {
         ActorMap::iterator begin() const { return first; }
