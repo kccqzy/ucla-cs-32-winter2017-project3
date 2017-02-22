@@ -28,11 +28,18 @@ struct TupleComp {
     // Induce an ordering on (potentially heterogeneous) tuples of possibly
     // unequal sizes. The standard ordering on tuples require them to be of the
     // same size, which is too restrictive. Instead, we model each element in an
-    // tuple as a sort key. Then for any two tuples of different sizes N and M,
-    // we consider them to be separate equivalence relations. Then obviously
-    // whenever N>M, the equivalence relation induced by the tuple N is a
-    // refinement, because each individual item in the tuple creates a finer
-    // partition.
+    // tuple as a sort key that determines whether or not any possible actor
+    // belongs in this partition. Then tuples of different sizes become coarser
+    // or finer partitions of the set of actors. It has the following
+    // properties: (a) uniqueness: for all actor, there exists one and only one
+    // sort key, and therefore this sort key partitions the set of all actors
+    // into disjoint subsets; (b) composability: for all concatenation of tuples
+    // $(p,q)$, the partition induced by $(p,q)$ is the same as partitioning by
+    // $q$ on each subset produced by partitioning on $p$. Thus we can define a
+    // strict weak ordering $<^*$ on these tuples of unequal sizes by taking the
+    // longest common prefix and then using the standard strict weak ordering
+    // $<$. The proof that this new ordering is in fact irreflexive and
+    // transitive is left to whoever grades this CS project ;).
     template<typename... T, typename... U, std::size_t... I>
     bool operator()(std::tuple<T...> const& a, std::tuple<U...> const& b, std::index_sequence<I...>) const {
         return std::make_tuple(std::get<I>(a)...) < std::make_tuple(std::get<I>(b)...);
