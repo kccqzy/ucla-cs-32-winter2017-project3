@@ -27,7 +27,9 @@ void Anthill::doSomething() {
         return;
     }
     if (m_currentEnergy >= 2000) {
-        // TODO Create new ant.
+        m_sw.insertActorAtEndOfTick<Ant>(getCoord(), m_type, m_comp);
+        m_currentEnergy -= 1500;
+        m_sw.increaseAntCountForColony(m_type);
     }
 }
 

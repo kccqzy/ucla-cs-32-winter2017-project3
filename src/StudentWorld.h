@@ -119,6 +119,8 @@ public:
     void insertActorAtEndOfTick(Args&&... args) {
         newActors.emplace_back(std::make_unique<Actor>(*this, std::forward<Args>(args)...));
     }
+
+    void increaseAntCountForColony(int t) { antInfo[t].antCount++; } // TODO decrease ant count on ant death?
 };
 
 #endif // STUDENTWORLD_H_
