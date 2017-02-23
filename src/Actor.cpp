@@ -1,12 +1,9 @@
 #include "Actor.h"
 #include "StudentWorld.h"
 #include <cassert>
+#include <string>
 
-bool Actor::canMoveHere(Coord c) const {
-    auto actors = m_sw.getActorsAt(c, IID_ROCK);
-    if (actors.begin() != actors.end()) return false;
-    return true;
-}
+bool Actor::canMoveHere(Coord c) const { return m_sw.getActorsAt(c, IID_ROCK).empty(); }
 
 int Actor::attemptConsumeAtMostFood(int maxEnergy) const {
     auto actorsHere = m_sw.getActorsAt(getCoord(), IID_FOOD);
@@ -91,4 +88,112 @@ std::vector<Coord> AdultGrassHopper::findOpenSquaresCenteredHere() const {
             if ((x - x0) * (x - x0) + (y - y0) * (y - y0) <= radius * radius && canMoveHere({x, y}))
                 rv.emplace_back(x, y);
     return rv;
+}
+
+void Ant::doSomething() {
+    if (!burnEnergyAndSleep()) return; // Step 1--3
+    for (int i = 0; i < 10; ++i)
+        if (!eval_instr()) return; // Step 4
+}
+
+bool Ant::eval_if(Compiler::Condition cond) const {
+    switch (cond) {
+    case Compiler::Condition::last_random_number_was_zero: return m_rand == 0;
+    case Compiler::Condition::i_am_carrying_food: return m_foodHeld > 0;
+    case Compiler::Condition::i_am_hungry: return m_currentEnergy <= 25;
+    case Compiler::Condition::i_am_standing_with_an_enemy:
+        for (auto const& actor : m_sw.getActorsAt(getCoord())) {
+            int iid = actor.second->iid();
+            if (iid == IID_ADULT_GRASSHOPPER || iid == IID_BABY_GRASSHOPPER ||
+                (iid >= IID_ANT_TYPE0 && iid <= IID_ANT_TYPE3 && m_type != iid - IID_ANT_TYPE0))
+                return true;
+        }
+        return false;
+    case Compiler::Condition::i_am_standing_on_my_anthill:
+        for (auto const& actor : m_sw.getActorsAt(getCoord()))
+            if (actor.second->iid() == IID_ANT_HILL && static_cast<Anthill&>(*actor.second).getType() == m_type)
+                return true;
+        return false;
+    case Compiler::Condition::i_am_standing_on_food: return !m_sw.getActorsAt(getCoord(), IID_FOOD).empty();
+    case Compiler::Condition::i_smell_pheromone_in_front_of_me:
+        for (auto const& actor : m_sw.getActorsAt(nextLocation())) {
+            int iid = actor.second->iid();
+            if (iid >= IID_PHEROMONE_TYPE0 && iid <= IID_PHEROMONE_TYPE3) return true;
+        }
+        return false;
+    case Compiler::Condition::i_smell_danger_in_front_of_me:
+        for (auto const& actor : m_sw.getActorsAt(nextLocation())) {
+            int iid = actor.second->iid();
+            if (iid == IID_POISON || iid == IID_ADULT_GRASSHOPPER || iid == IID_BABY_GRASSHOPPER ||
+                (iid >= IID_ANT_TYPE0 && iid <= IID_ANT_TYPE3 && m_type != iid - IID_ANT_TYPE0))
+                return true;
+        }
+        return false;
+    case Compiler::Condition::i_was_bit:
+        return false; // TODO
+    case Compiler::Condition::i_was_blocked_from_moving: return m_isBlocked;
+    case Compiler::Condition::invalid_if: assert(false && "invalid if condition in compiled Ant instructions");
+    }
+}
+
+bool Ant::eval_instr() {
+    Compiler::Command cmd;
+    if (!m_comp.getCommand(m_ic++, cmd)) {
+        m_currentEnergy = 0;
+        return false;
+    }
+    switch (cmd.opcode) {
+    case Compiler::Opcode::moveForward: {
+        auto next = nextLocation();
+        if (canMoveHere(next)) {
+            moveTo(next);
+            m_isBlocked = false;
+        } else {
+            m_isBlocked = true;
+        }
+        return false;
+    }
+    case Compiler::Opcode::eatFood: {
+        int toEat = std::min(100, m_foodHeld);
+        m_foodHeld -= toEat;
+        m_currentEnergy += toEat;
+        return false;
+    }
+    case Compiler::Opcode::dropFood:
+        if (m_foodHeld) {
+            addFoodHere(m_foodHeld);
+            m_foodHeld = 0;
+        }
+        return false;
+    case Compiler::Opcode::bite:
+        // TODO
+        return false;
+    case Compiler::Opcode::pickupFood:
+        m_foodHeld += attemptConsumeAtMostFood(std::min(400, 1800 - m_foodHeld));
+        return false;
+    case Compiler::Opcode::emitPheromone:
+        // TODO
+        return false;
+    case Compiler::Opcode::faceRandomDirection:
+        setDirection(static_cast<GraphObject::Direction>(randInt(up, left)));
+        return false;
+    case Compiler::Opcode::generateRandomNumber: {
+        int operand1 = std::stoi(cmd.operand1);
+        assert(operand1 >= 0);
+        m_rand = operand1 ? randInt(0, operand1 - 1) : 0;
+        return true;
+    }
+    case Compiler::Opcode::goto_command: m_ic = std::stoi(cmd.operand1); return true;
+    case Compiler::Opcode::if_command:
+        if (eval_if(static_cast<Compiler::Condition>(std::stoi(cmd.operand1)))) m_ic = std::stoi(cmd.operand2);
+        return true;
+    case Compiler::Opcode::rotateClockwise:
+        setDirection(static_cast<GraphObject::Direction>((getDirection() - up + 1) % 4 + up));
+        return false;
+    case Compiler::Opcode::rotateCounterClockwise:
+        setDirection(static_cast<GraphObject::Direction>((getDirection() - up + 3) % 4 + up));
+        return false;
+    case Compiler::Opcode::label: assert(false && "unresolved label in compiled Ant instructions");
+    case Compiler::Opcode::invalid: assert(false && "unknown instruction in compiled Ant instructions");
+    }
 }

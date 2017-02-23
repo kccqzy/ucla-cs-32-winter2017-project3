@@ -80,7 +80,12 @@ public:
 
 private:
     int m_type;
-    static int typeToIID(int type) { return IID_PHEROMONE_TYPE0 + type; }
+    static int typeToIID(int type) {
+        static_assert(IID_PHEROMONE_TYPE0 + 1 == IID_PHEROMONE_TYPE1, "Unexpected IID_PHEROMONE_TYPE1 index");
+        static_assert(IID_PHEROMONE_TYPE0 + 2 == IID_PHEROMONE_TYPE2, "Unexpected IID_PHEROMONE_TYPE2 index");
+        static_assert(IID_PHEROMONE_TYPE0 + 3 == IID_PHEROMONE_TYPE3, "Unexpected IID_PHEROMONE_TYPE3 index");
+        return IID_PHEROMONE_TYPE0 + type;
+    }
     virtual int iid() const override { return typeToIID(m_type); }
     virtual void doSomething() override { --m_currentEnergy; }
 };
@@ -89,6 +94,7 @@ class Anthill final : public EnergyHolder {
 public:
     Anthill(StudentWorld& sw, Coord c, int type, Compiler const& comp)
       : EnergyHolder(8999, sw, IID_ANT_HILL, c, right, 2), m_comp(comp), m_type(type) {}
+    int getType() const { return m_type; }
 
 private:
     Compiler const& m_comp;
@@ -116,6 +122,28 @@ protected:
     }
 };
 
+class Ant final : public Insect {
+public:
+    Ant(StudentWorld& sw, Coord c, int type, Compiler const& comp)
+        : Insect(1500, sw, typeToIID(type), c), m_comp(comp), m_ic(0), m_type(type), m_rand(0), m_foodHeld(0), m_isBlocked(false) {}
+    virtual int iid() const override { return typeToIID(m_type); }
+    virtual void doSomething() override;
+
+private:
+    Compiler const& m_comp;
+    size_t m_ic;
+    int m_type, m_rand, m_foodHeld;
+    bool m_isBlocked;
+    static int typeToIID(int type) {
+        static_assert(IID_ANT_TYPE0 + 1 == IID_ANT_TYPE1, "Unexpected IID_ANT_TYPE1 index");
+        static_assert(IID_ANT_TYPE0 + 2 == IID_ANT_TYPE2, "Unexpected IID_ANT_TYPE2 index");
+        static_assert(IID_ANT_TYPE0 + 3 == IID_ANT_TYPE3, "Unexpected IID_ANT_TYPE3 index");
+        return IID_ANT_TYPE0 + type;
+    }
+    bool eval_instr();
+    bool eval_if(Compiler::Condition cond) const;
+};
+
 class GrassHopper : public Insect {
 protected:
     template<typename... Args>
@@ -136,6 +164,7 @@ public:
     AdultGrassHopper(StudentWorld& sw, Coord c) : GrassHopper(1600, sw, IID_ADULT_GRASSHOPPER, c) {}
     virtual void doSomething() override;
     virtual int iid() const override { return IID_ADULT_GRASSHOPPER; }
+
 private:
     std::vector<Coord> findOpenSquaresCenteredHere() const;
 };

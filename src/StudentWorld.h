@@ -106,6 +106,7 @@ public:
     struct ActorRange : private RawActorRange {
         ActorMap::iterator begin() const { return first; }
         ActorMap::iterator end() const { return second; }
+        bool empty() const { return first == second; }
         ActorRange(RawActorRange const& p) : RawActorRange(p) {}
     };
     template<typename CoordOrKey>
