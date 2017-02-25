@@ -140,8 +140,8 @@ private:
         static_assert(IID_ANT_TYPE0 + 3 == IID_ANT_TYPE3, "Unexpected IID_ANT_TYPE3 index");
         return IID_ANT_TYPE0 + type;
     }
-    bool eval_instr();
-    bool eval_if(Compiler::Condition cond) const;
+    bool evalInstr();
+    bool evalIf(Compiler::Condition cond) const;
 };
 
 class GrassHopper : public Insect {

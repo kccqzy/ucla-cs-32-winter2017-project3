@@ -95,10 +95,10 @@ std::vector<Coord> AdultGrassHopper::findOpenSquaresCenteredHere() const {
 void Ant::doSomething() {
     if (!burnEnergyAndSleep()) return; // Step 1--3
     for (int i = 0; i < 10; ++i)
-        if (!eval_instr()) return; // Step 4
+        if (!evalInstr()) return; // Step 4
 }
 
-bool Ant::eval_if(Compiler::Condition cond) const {
+bool Ant::evalIf(Compiler::Condition cond) const {
     switch (cond) {
     case Compiler::Condition::last_random_number_was_zero: return m_rand == 0;
     case Compiler::Condition::i_am_carrying_food: return m_foodHeld > 0;
@@ -138,7 +138,7 @@ bool Ant::eval_if(Compiler::Condition cond) const {
     }
 }
 
-bool Ant::eval_instr() {
+bool Ant::evalInstr() {
     Compiler::Command cmd;
     if (!m_comp.getCommand(m_ic++, cmd)) {
         m_currentEnergy = 0;
@@ -187,7 +187,7 @@ bool Ant::eval_instr() {
     }
     case Compiler::Opcode::goto_command: m_ic = std::stoi(cmd.operand1); return true;
     case Compiler::Opcode::if_command:
-        if (eval_if(static_cast<Compiler::Condition>(std::stoi(cmd.operand1)))) m_ic = std::stoi(cmd.operand2);
+        if (evalIf(static_cast<Compiler::Condition>(std::stoi(cmd.operand1)))) m_ic = std::stoi(cmd.operand2);
         return true;
     case Compiler::Opcode::rotateClockwise:
         setDirection(static_cast<GraphObject::Direction>((getDirection() - up + 1) % 4 + up));
