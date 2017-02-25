@@ -91,7 +91,8 @@ private:
             for (size_t i = 0; i < antInfo.size(); ++i) {
                 oss << (i ? "  " : " - ") << antInfo[i].name;
                 if ((int) i == winningAnt) oss << '*';
-                oss << ": " << std::setfill('0') << std::setw(2) << antInfo[i].antCount;
+                oss << ": " << std::setfill('0') << std::setw(2) << antInfo[i].antCount << " ants";
+                // Do not distinguish between plural and singular forms. This is intentional.
             }
         }
         setGameStatText(oss.str());
