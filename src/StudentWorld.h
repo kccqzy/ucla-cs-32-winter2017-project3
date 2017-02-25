@@ -68,9 +68,13 @@ private:
         std::string name;
         Compiler compiler;
         int antCount;
+        int antCountTimestamp;
         AntColonyInfo(std::string const& name, Compiler&& compiler)
-          : name(name), compiler(std::move(compiler)), antCount(0) {}
-        friend bool operator<(AntColonyInfo const& a, AntColonyInfo const& b) { return a.antCount < b.antCount; }
+          : name(name), compiler(std::move(compiler)), antCount(0), antCountTimestamp(0) {}
+        friend bool operator<(AntColonyInfo const& a, AntColonyInfo const& b) {
+            return std::make_tuple(a.antCount, -a.antCountTimestamp) <
+                   std::make_tuple(b.antCount, -b.antCountTimestamp);
+        }
     };
     std::vector<AntColonyInfo> antInfo;
 
@@ -121,7 +125,13 @@ public:
         newActors.emplace_back(std::make_unique<Actor>(*this, std::forward<Args>(args)...));
     }
 
-    void increaseAntCountForColony(int t) { antInfo[t].antCount++; } // TODO decrease ant count on ant death?
+    void increaseAntCountForColony(int t) {
+        // The winner is defined as one that produced more ants than its
+        // competitors, or if there is a tie, the colony that produced the most
+        // ants first.
+        antInfo[t].antCount++;
+        antInfo[t].antCountTimestamp = ticks;
+    }
 };
 
 #endif // STUDENTWORLD_H_
