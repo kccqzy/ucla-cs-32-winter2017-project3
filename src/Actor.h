@@ -32,17 +32,26 @@ protected:
 
 public:
     virtual ~Actor() {}
-    virtual void doSomething() {}
+    virtual void doSomething() = 0;
     virtual int iid() const = 0;
     Coord getCoord() const { return std::make_tuple(getX(), getY()); }
     std::tuple<int, int, int> getKey() const { return std::make_tuple(getX(), getY(), iid()); }
     virtual bool isDead() const { return false; } // TODO are non energyholders always not dead?
+    virtual void beStunned() {}
 };
 
 class Pebble final : public Actor {
 public:
     Pebble(StudentWorld& sw, Coord c) : Actor(sw, IID_ROCK, c, right, 1) {}
     virtual int iid() const override { return IID_ROCK; }
+    virtual void doSomething() override {}
+};
+
+class PoolOfWater final : public Actor {
+public:
+    PoolOfWater(StudentWorld& sw, Coord c) : Actor(sw, IID_WATER_POOL, c, right, 2) {}
+    virtual int iid() const override { return IID_WATER_POOL; }
+    virtual void doSomething() override;
 };
 
 class EnergyHolder : public Actor {
@@ -60,6 +69,7 @@ class Food final : public EnergyHolder {
 public:
     Food(StudentWorld& sw, Coord c, int energy) : EnergyHolder(energy, sw, IID_FOOD, c, right, 2) {}
     virtual int iid() const override { return IID_FOOD; }
+    virtual void doSomething() override {}
     void increaseBy(int howMuch) { m_currentEnergy += howMuch; }
     int consumeAtMost(int howMuch) {
         if (howMuch < m_currentEnergy) {
@@ -106,9 +116,10 @@ private:
 class Insect : public EnergyHolder {
 protected:
     Insect(int initialEnergy, StudentWorld& sw, int iid, Coord c)
-      : EnergyHolder(initialEnergy, sw, iid, c, static_cast<GraphObject::Direction>(randInt(up, left)), 1), m_sleep(0) {
-    }
+      : EnergyHolder(initialEnergy, sw, iid, c, static_cast<GraphObject::Direction>(randInt(up, left)), 1), m_sleep(0),
+        m_hasBeenStunnedHere(false) {}
     int m_sleep;
+    bool m_hasBeenStunnedHere;
     bool burnEnergyAndSleep() {
         if (!--m_currentEnergy) { // Step 1, 2
             addFoodHere(100);
@@ -120,12 +131,23 @@ protected:
         }
         return true;
     }
+    void moveTo(Coord c) { // Overload not override. No virtual needed.
+        Actor::moveTo(c);
+        m_hasBeenStunnedHere = false;
+    }
+    virtual void beStunned() override {
+        if (!m_hasBeenStunnedHere) {
+            m_hasBeenStunnedHere = true;
+            m_sleep += 2;
+        }
+    }
 };
 
 class Ant final : public Insect {
 public:
     Ant(StudentWorld& sw, Coord c, int type, Compiler const& comp)
-        : Insect(1500, sw, typeToIID(type), c), m_comp(comp), m_ic(0), m_type(type), m_rand(0), m_foodHeld(0), m_isBlocked(false) {}
+      : Insect(1500, sw, typeToIID(type), c), m_comp(comp), m_ic(0), m_type(type), m_rand(0), m_foodHeld(0),
+        m_isBlocked(false) {}
     virtual int iid() const override { return typeToIID(m_type); }
     virtual void doSomething() override;
 
@@ -164,6 +186,7 @@ public:
     AdultGrassHopper(StudentWorld& sw, Coord c) : GrassHopper(1600, sw, IID_ADULT_GRASSHOPPER, c) {}
     virtual void doSomething() override;
     virtual int iid() const override { return IID_ADULT_GRASSHOPPER; }
+    virtual void beStunned() override {}
 
 private:
     std::vector<Coord> findOpenSquaresCenteredHere() const;

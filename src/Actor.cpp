@@ -6,16 +6,20 @@
 bool Actor::canMoveHere(Coord c) const { return m_sw.getActorsAt(c, IID_ROCK).empty(); }
 
 int Actor::attemptConsumeAtMostFood(int maxEnergy) const {
-    auto actorsHere = m_sw.getActorsAt(getCoord(), IID_FOOD);
-    for (auto const& actor : actorsHere) return static_cast<Food&>(*actor.second).consumeAtMost(maxEnergy);
+    for (auto const& actor : m_sw.getActorsAt(getCoord(), IID_FOOD))
+        return static_cast<Food&>(*actor.second).consumeAtMost(maxEnergy);
     return 0;
 }
 
 void Actor::addFoodHere(int howMuch) const {
     auto here = getCoord();
-    auto actorsHere = m_sw.getActorsAt(here, IID_FOOD);
-    for (auto const& actor : actorsHere) return static_cast<Food&>(*actor.second).increaseBy(howMuch);
+    for (auto const& actor : m_sw.getActorsAt(here, IID_FOOD))
+        return static_cast<Food&>(*actor.second).increaseBy(howMuch);
     m_sw.insertActorAtEndOfTick<Food>(here, howMuch);
+}
+
+void PoolOfWater::doSomething() {
+    for (auto const& actor : m_sw.getActorsAt(getCoord())) actor.second->beStunned();
 }
 
 void Anthill::doSomething() {
