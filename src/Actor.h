@@ -38,6 +38,7 @@ public:
     std::tuple<int, int, int> getKey() const { return std::make_tuple(getX(), getY(), iid()); }
     virtual bool isDead() const { return false; } // TODO are non energyholders always not dead?
     virtual void beStunned() {}
+    virtual void bePoisoned() {}
 };
 
 class Pebble final : public Actor {
@@ -54,6 +55,13 @@ public:
     virtual void doSomething() override;
 };
 
+class Poison final : public Actor {
+public:
+    Poison(StudentWorld& sw, Coord c) : Actor(sw, IID_POISON, c, right, 2) {}
+    virtual int iid() const override { return IID_POISON; }
+    virtual void doSomething() override;
+};
+
 class EnergyHolder : public Actor {
 protected:
     int m_currentEnergy;
@@ -62,7 +70,10 @@ protected:
       : Actor(std::forward<Args>(args)...), m_currentEnergy{initialEnergy} {}
 
 public:
-    virtual bool isDead() const override { return !m_currentEnergy; }
+    virtual bool isDead() const override {
+        assert(m_currentEnergy >= 0);
+        return !m_currentEnergy;
+    }
 };
 
 class Food final : public EnergyHolder {
@@ -141,6 +152,7 @@ protected:
             m_sleep += 2;
         }
     }
+    virtual void bePoisoned() override { m_currentEnergy -= std::min(150, m_currentEnergy); }
 };
 
 class Ant final : public Insect {
@@ -187,6 +199,7 @@ public:
     virtual void doSomething() override;
     virtual int iid() const override { return IID_ADULT_GRASSHOPPER; }
     virtual void beStunned() override {}
+    virtual void bePoisoned() override {}
 
 private:
     std::vector<Coord> findOpenSquaresCenteredHere() const;

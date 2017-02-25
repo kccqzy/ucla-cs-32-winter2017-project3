@@ -22,6 +22,10 @@ void PoolOfWater::doSomething() {
     for (auto const& actor : m_sw.getActorsAt(getCoord())) actor.second->beStunned();
 }
 
+void Poison::doSomething() {
+    for (auto const& actor : m_sw.getActorsAt(getCoord())) actor.second->bePoisoned();
+}
+
 void Anthill::doSomething() {
     if (!--m_currentEnergy) return;
 
