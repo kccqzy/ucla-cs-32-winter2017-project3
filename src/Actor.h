@@ -40,6 +40,7 @@ public:
     virtual bool isDead() const { return false; } // TODO are non energyholders always not dead?
     virtual void beStunned() {}
     virtual void bePoisoned() {}
+    virtual void beBitten(int) {}
 };
 
 class Pebble final : public Actor {
@@ -143,9 +144,13 @@ protected:
         return true;
     }
     void moveTo(Coord c) { // Overload not override. No virtual needed.
+        assert(c != getCoord());
         Actor::moveTo(c);
         m_hasBeenStunnedHere = false;
     }
+    std::vector<Insect*> findOtherInsectsHere() const;
+
+public:
     virtual void beStunned() override {
         if (!m_hasBeenStunnedHere) {
             m_hasBeenStunnedHere = true;
@@ -153,13 +158,14 @@ protected:
         }
     }
     virtual void bePoisoned() override { m_currentEnergy -= std::min(150, m_currentEnergy); }
+    virtual void beBitten(int damage) override { m_currentEnergy -= std::min(damage, m_currentEnergy); }
 };
 
 class Ant final : public Insect {
 public:
     Ant(StudentWorld& sw, Coord c, int type, Compiler const& comp)
       : Insect(1500, sw, typeToIID(type), c), m_comp(comp), m_ic(0), m_type(type), m_rand(0), m_foodHeld(0),
-        m_isBlocked(false) {}
+        m_isBlocked(false), m_isBitten(false) {}
     virtual int iid() const override { return typeToIID(m_type); }
     virtual void doSomething() override;
 
@@ -167,7 +173,7 @@ private:
     Compiler const& m_comp;
     size_t m_ic;
     int m_type, m_rand, m_foodHeld;
-    bool m_isBlocked;
+    bool m_isBlocked, m_isBitten;
     static int typeToIID(int type) {
         static_assert(IID_ANT_TYPE0 + 1 == IID_ANT_TYPE1, "Unexpected IID_ANT_TYPE1 index");
         static_assert(IID_ANT_TYPE0 + 2 == IID_ANT_TYPE2, "Unexpected IID_ANT_TYPE2 index");
@@ -176,6 +182,11 @@ private:
     }
     bool evalInstr();
     bool evalIf(Compiler::Condition cond) const;
+    void moveTo(Coord c) { // Overload not override. No virtual needed.
+        assert(c != getCoord());
+        Insect::moveTo(c);
+        m_isBitten = false;
+    }
 };
 
 class GrassHopper : public Insect {
@@ -200,6 +211,16 @@ public:
     virtual int iid() const override { return IID_ADULT_GRASSHOPPER; }
     virtual void beStunned() override {}
     virtual void bePoisoned() override {}
+    virtual void beBitten(int damage) override {
+        Insect::beBitten(damage);
+        if (!isDead() && randInt(0, 1)) {
+            // Retaliate.
+            auto insectsHere = findOtherInsectsHere();
+            // There must be another insect here.
+            assert(!insectsHere.empty());
+            insectsHere[randInt(0, insectsHere.size() - 1)]->beBitten(50);
+        }
+    }
 
 private:
     std::vector<Coord> findOpenSquaresCenteredHere() const;

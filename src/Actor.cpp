@@ -1,5 +1,6 @@
 #include "Actor.h"
 #include "StudentWorld.h"
+#include <algorithm>
 #include <cassert>
 #include <string>
 
@@ -75,7 +76,10 @@ void BabyGrassHopper::doSomething() {
 
 void AdultGrassHopper::doSomething() {
     if (!burnEnergyAndSleep()) return; // Step 1--4
-    // TODO Step 5
+    if (!randInt(0, 2)) {              // Step 5
+        auto insectsHere = findOtherInsectsHere();
+        if (!insectsHere.empty()) insectsHere[randInt(0, insectsHere.size() - 1)]->beBitten(50);
+    }
     if (!randInt(0, 9)) { // Step 6
         auto openSquares = findOpenSquaresCenteredHere();
         if (!openSquares.empty()) {
@@ -98,6 +102,20 @@ std::vector<Coord> AdultGrassHopper::findOpenSquaresCenteredHere() const {
             if ((x || y) && (x - x0) * (x - x0) + (y - y0) * (y - y0) <= radius * radius && canMoveHere({x, y}))
                 rv.emplace_back(x, y);
     return rv;
+}
+
+std::vector<Insect*> Insect::findOtherInsectsHere() const {
+    auto actorsHere = m_sw.getActorsAt(getCoord());
+    std::vector<Insect*> insectsHere; // TODO use better search
+    for (auto const& actor : actorsHere) {
+        if (actor.second.get() != this && !actor.second->isDead()) {
+            int iid = actor.second->iid();
+            if (iid == IID_ADULT_GRASSHOPPER || iid == IID_BABY_GRASSHOPPER ||
+                (iid >= IID_ANT_TYPE0 && iid <= IID_ANT_TYPE3))
+                insectsHere.emplace_back(static_cast<Insect*>(actor.second.get()));
+        }
+    }
+    return insectsHere;
 }
 
 void Ant::doSomething() {
@@ -139,8 +157,7 @@ bool Ant::evalIf(Compiler::Condition cond) const {
                 return true;
         }
         return false;
-    case Compiler::Condition::i_was_bit:
-        return false; // TODO
+    case Compiler::Condition::i_was_bit: return m_isBitten;
     case Compiler::Condition::i_was_blocked_from_moving: return m_isBlocked;
     case Compiler::Condition::invalid_if: assert(false && "invalid if condition in compiled Ant instructions");
     }
@@ -175,9 +192,14 @@ bool Ant::evalInstr() {
             m_foodHeld = 0;
         }
         return false;
-    case Compiler::Opcode::bite:
-        // TODO
+    case Compiler::Opcode::bite: {
+        auto insectsHere = findOtherInsectsHere();
+        insectsHere.erase(std::remove_if(insectsHere.begin(), insectsHere.end(),
+                                         [this](Insect* i) { return i->iid() == IID_ANT_TYPE0 + m_type; }),
+                          insectsHere.end());
+        if (!insectsHere.empty()) insectsHere[randInt(0, insectsHere.size() - 1)]->beBitten(15);
         return false;
+    }
     case Compiler::Opcode::pickupFood:
         m_foodHeld += attemptConsumeAtMostFood(std::min(400, 1800 - m_foodHeld));
         return false;
