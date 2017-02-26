@@ -29,7 +29,7 @@ protected:
     void moveTo(Coord c) { GraphObject::moveTo(std::get<0>(c), std::get<1>(c)); }
     int attemptConsumeAtMostFood(int maxEnergy) const;
     void addFoodHere(int howMuch) const;
-    static auto randomDirection() { return static_cast<GraphObject::Direction>(randInt(up, left)); }
+    static auto randomDirection() { return static_cast<Direction>(randInt(up, left)); }
 
 public:
     virtual ~Actor() {}

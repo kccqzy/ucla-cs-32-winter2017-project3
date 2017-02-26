@@ -196,10 +196,10 @@ bool Ant::evalInstr() {
         if (evalIf(static_cast<Compiler::Condition>(std::stoi(cmd.operand1)))) m_ic = std::stoi(cmd.operand2);
         return true;
     case Compiler::Opcode::rotateClockwise:
-        setDirection(static_cast<GraphObject::Direction>((getDirection() - up + 1) % 4 + up));
+        setDirection(static_cast<Direction>((getDirection() - up + 1) % 4 + up));
         return false;
     case Compiler::Opcode::rotateCounterClockwise:
-        setDirection(static_cast<GraphObject::Direction>((getDirection() - up + 3) % 4 + up));
+        setDirection(static_cast<Direction>((getDirection() - up + 3) % 4 + up));
         return false;
     case Compiler::Opcode::label: assert(false && "unresolved label in compiled Ant instructions");
     case Compiler::Opcode::invalid: assert(false && "unknown instruction in compiled Ant instructions");
