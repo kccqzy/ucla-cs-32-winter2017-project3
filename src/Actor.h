@@ -14,8 +14,9 @@ class StudentWorld;
 class Actor : public GraphObject {
 protected:
     StudentWorld& m_sw;
+    int m_iid;
     Actor(StudentWorld& sw, int iid, Coord c, Direction dir, unsigned depth)
-      : GraphObject(iid, std::get<0>(c), std::get<1>(c), dir, depth), m_sw(sw) {}
+        : GraphObject(iid, std::get<0>(c), std::get<1>(c), dir, depth), m_sw(sw), m_iid(iid) {}
     bool canMoveHere(Coord c) const;
     Coord nextLocation() const {
         switch (getDirection()) {
@@ -35,7 +36,7 @@ protected:
 public:
     virtual ~Actor() {}
     virtual void doSomething() = 0;
-    virtual int iid() const = 0;
+    int iid() const { return m_iid; }
     Coord getCoord() const { return std::make_tuple(getX(), getY()); }
     std::tuple<int, int, int> getKey() const { return std::make_tuple(getX(), getY(), iid()); }
     virtual bool isDead() const { return false; } // TODO are non energyholders always not dead?
@@ -47,21 +48,18 @@ public:
 class Pebble final : public Actor {
 public:
     Pebble(StudentWorld& sw, Coord c) : Actor(sw, IID_ROCK, c, right, 1) {}
-    virtual int iid() const override { return IID_ROCK; }
     virtual void doSomething() override {}
 };
 
 class PoolOfWater final : public Actor {
 public:
     PoolOfWater(StudentWorld& sw, Coord c) : Actor(sw, IID_WATER_POOL, c, right, 2) {}
-    virtual int iid() const override { return IID_WATER_POOL; }
     virtual void doSomething() override;
 };
 
 class Poison final : public Actor {
 public:
     Poison(StudentWorld& sw, Coord c) : Actor(sw, IID_POISON, c, right, 2) {}
-    virtual int iid() const override { return IID_POISON; }
     virtual void doSomething() override;
 };
 
@@ -82,7 +80,6 @@ public:
 class Food final : public EnergyHolder {
 public:
     Food(StudentWorld& sw, Coord c, int energy) : EnergyHolder(energy, sw, IID_FOOD, c, right, 2) {}
-    virtual int iid() const override { return IID_FOOD; }
     virtual void doSomething() override {}
     void increaseBy(int howMuch) { m_currentEnergy += howMuch; }
     int consumeAtMost(int howMuch) {
@@ -109,7 +106,6 @@ private:
         static_assert(IID_PHEROMONE_TYPE0 + 3 == IID_PHEROMONE_TYPE3, "Unexpected IID_PHEROMONE_TYPE3 index");
         return IID_PHEROMONE_TYPE0 + type;
     }
-    virtual int iid() const override { return typeToIID(m_type); }
     virtual void doSomething() override { --m_currentEnergy; }
 };
 
@@ -122,7 +118,6 @@ public:
 private:
     Compiler const& m_comp;
     int m_type;
-    virtual int iid() const override { return IID_ANT_HILL; }
     virtual void doSomething() override;
 };
 
@@ -166,7 +161,6 @@ public:
     Ant(StudentWorld& sw, Coord c, int type, Compiler const& comp)
       : Insect(1500, sw, typeToIID(type), c), m_comp(comp), m_ic(0), m_type(type), m_rand(0), m_foodHeld(0),
         m_isBlocked(false), m_isBitten(false) {}
-    virtual int iid() const override { return typeToIID(m_type); }
     virtual void doSomething() override;
 
 private:
@@ -201,14 +195,12 @@ class BabyGrassHopper final : public GrassHopper {
 public:
     BabyGrassHopper(StudentWorld& sw, Coord c) : GrassHopper(500, sw, IID_BABY_GRASSHOPPER, c) {}
     virtual void doSomething() override;
-    virtual int iid() const override { return IID_BABY_GRASSHOPPER; }
 };
 
 class AdultGrassHopper final : public GrassHopper {
 public:
     AdultGrassHopper(StudentWorld& sw, Coord c) : GrassHopper(1600, sw, IID_ADULT_GRASSHOPPER, c) {}
     virtual void doSomething() override;
-    virtual int iid() const override { return IID_ADULT_GRASSHOPPER; }
     virtual void beStunned() override {}
     virtual void bePoisoned() override {}
     virtual void beBitten(int damage) override {
