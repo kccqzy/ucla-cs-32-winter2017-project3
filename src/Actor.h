@@ -28,7 +28,8 @@ protected:
     }
     void moveTo(Coord c) { GraphObject::moveTo(std::get<0>(c), std::get<1>(c)); }
     int attemptConsumeAtMostFood(int maxEnergy) const;
-    void addFoodHere(int howMuch) const;
+    template<typename A>
+    void increaseEnergyOrNewObject(int iid, int howMuch) const;
     static auto randomDirection() { return static_cast<Direction>(randInt(up, left)); }
 
 public:
@@ -98,6 +99,7 @@ class Pheremone final : public EnergyHolder {
 public:
     Pheremone(StudentWorld& sw, Coord c, int type)
       : EnergyHolder(256, sw, typeToIID(type), c, right, 2), m_type(type) {}
+    void increaseBy(int howMuch) { m_currentEnergy = std::max(768, m_currentEnergy + howMuch); }
 
 private:
     int m_type;
@@ -132,7 +134,7 @@ protected:
     bool m_hasBeenStunnedHere;
     bool burnEnergyAndSleep() {
         if (!--m_currentEnergy) { // Step 1, 2
-            addFoodHere(100);
+            increaseEnergyOrNewObject<Food>(IID_FOOD, 100);
             return false;
         }
         if (m_sleep) { // Step 3, 4

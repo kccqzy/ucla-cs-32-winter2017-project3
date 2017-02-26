@@ -12,11 +12,12 @@ int Actor::attemptConsumeAtMostFood(int maxEnergy) const {
     return 0;
 }
 
-void Actor::addFoodHere(int howMuch) const {
+template<typename A>
+void Actor::increaseEnergyOrNewObject(int iid, int howMuch) const {
     auto here = getCoord();
-    for (auto const& actor : m_sw.getActorsAt(here, IID_FOOD))
-        return static_cast<Food&>(*actor.second).increaseBy(howMuch);
-    m_sw.insertActorAtEndOfTick<Food>(here, howMuch);
+    for (auto const& actor: m_sw.getActorsAt(here, iid))
+        return (void)static_cast<A&>(*actor.second).increaseBy(howMuch);
+    m_sw.insertActorAtEndOfTick<A>(here, howMuch);
 }
 
 void PoolOfWater::doSomething() {
@@ -65,7 +66,7 @@ void GrassHopper::consumeFoodAndMove() {
 void BabyGrassHopper::doSomething() {
     if (!burnEnergyAndSleep()) return; // Step 1--4
     if (m_currentEnergy >= 1600) {     // Step 5
-        addFoodHere(100);
+        increaseEnergyOrNewObject<Food>(IID_FOOD, 100);
         m_sw.insertActorAtEndOfTick<AdultGrassHopper>(getCoord());
         m_currentEnergy = 0;
     }
@@ -186,7 +187,7 @@ bool Ant::evalInstr() {
     }
     case Compiler::Opcode::dropFood:
         if (m_foodHeld) {
-            addFoodHere(m_foodHeld);
+            increaseEnergyOrNewObject<Food>(IID_FOOD, m_foodHeld);
             m_foodHeld = 0;
         }
         return false;
@@ -202,7 +203,7 @@ bool Ant::evalInstr() {
         m_foodHeld += attemptConsumeAtMostFood(std::min(400, 1800 - m_foodHeld));
         return false;
     case Compiler::Opcode::emitPheromone:
-        // TODO
+        increaseEnergyOrNewObject<Pheremone>(IID_PHEROMONE_TYPE0 + m_type, 256);
         return false;
     case Compiler::Opcode::faceRandomDirection: setDirection(randomDirection()); return false;
     case Compiler::Opcode::generateRandomNumber: {
