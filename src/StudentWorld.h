@@ -80,7 +80,7 @@ private:
 
     template<typename Actor, typename... Args>
     void insertActor(int x, int y, Args&&... args) {
-        auto p = std::make_unique<Actor>(*this, std::make_pair(x, y), std::forward<Args>(args)...);
+        auto p = std::make_unique<Actor>(*this, std::make_tuple(x, y), std::forward<Args>(args)...);
         actors.emplace(p->getKey(), std::move(p));
     }
 

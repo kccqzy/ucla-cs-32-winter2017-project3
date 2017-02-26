@@ -29,10 +29,8 @@ void Poison::doSomething() {
 
 void Anthill::doSomething() {
     if (!--m_currentEnergy) return;
-
-    int totalFoodConsumed = attemptConsumeAtMostFood(10000);
-    if (totalFoodConsumed) {
-        m_currentEnergy += totalFoodConsumed;
+    if (int consumedFood = attemptConsumeAtMostFood(10000)) {
+        m_currentEnergy += consumedFood;
         return;
     }
     if (m_currentEnergy >= 2000) {

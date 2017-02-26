@@ -20,10 +20,10 @@ protected:
     Coord nextLocation() const {
         switch (getDirection()) {
         case Direction::none: assert(false && "Unexpected direction: none");
-        case Direction::up: return std::make_pair(getX(), getY() + 1);
-        case Direction::down: return std::make_pair(getX(), getY() - 1);
-        case Direction::left: return std::make_pair(getX() - 1, getY());
-        case Direction::right: return std::make_pair(getX() + 1, getY());
+        case Direction::up: return std::make_tuple(getX(), getY() + 1);
+        case Direction::down: return std::make_tuple(getX(), getY() - 1);
+        case Direction::left: return std::make_tuple(getX() - 1, getY());
+        case Direction::right: return std::make_tuple(getX() + 1, getY());
         }
     }
     void moveTo(Coord c) { GraphObject::moveTo(std::get<0>(c), std::get<1>(c)); }
@@ -89,9 +89,7 @@ public:
             m_currentEnergy -= howMuch;
             return howMuch;
         } else {
-            int rv = m_currentEnergy;
-            m_currentEnergy = 0;
-            return rv;
+            return std::exchange(m_currentEnergy, 0);
         }
     }
 };
