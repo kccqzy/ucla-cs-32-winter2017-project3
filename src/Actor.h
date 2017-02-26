@@ -29,6 +29,7 @@ protected:
     void moveTo(Coord c) { GraphObject::moveTo(std::get<0>(c), std::get<1>(c)); }
     int attemptConsumeAtMostFood(int maxEnergy) const;
     void addFoodHere(int howMuch) const;
+    static auto randomDirection() { return static_cast<GraphObject::Direction>(randInt(up, left)); }
 
 public:
     virtual ~Actor() {}
@@ -127,8 +128,7 @@ private:
 class Insect : public EnergyHolder {
 protected:
     Insect(int initialEnergy, StudentWorld& sw, int iid, Coord c)
-      : EnergyHolder(initialEnergy, sw, iid, c, static_cast<GraphObject::Direction>(randInt(up, left)), 1), m_sleep(0),
-        m_hasBeenStunnedHere(false) {}
+      : EnergyHolder(initialEnergy, sw, iid, c, randomDirection(), 1), m_sleep(0), m_hasBeenStunnedHere(false) {}
     int m_sleep;
     bool m_hasBeenStunnedHere;
     bool burnEnergyAndSleep() {

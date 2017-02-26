@@ -50,7 +50,7 @@ void GrassHopper::consumeFoodAndMove() {
         }
     }
     if (!m_distance) { // Step 8 (baby) or 8 (adult)
-        setDirection(static_cast<GraphObject::Direction>(randInt(up, left)));
+        setDirection(randomDirection());
         m_distance = randInt(2, 10);
     }
     auto next = nextLocation();
@@ -184,9 +184,7 @@ bool Ant::evalInstr() {
     case Compiler::Opcode::emitPheromone:
         // TODO
         return false;
-    case Compiler::Opcode::faceRandomDirection:
-        setDirection(static_cast<GraphObject::Direction>(randInt(up, left)));
-        return false;
+    case Compiler::Opcode::faceRandomDirection: setDirection(randomDirection()); return false;
     case Compiler::Opcode::generateRandomNumber: {
         int operand1 = std::stoi(cmd.operand1);
         assert(operand1 >= 0);
