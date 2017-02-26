@@ -83,23 +83,19 @@ public:
     virtual void doSomething() override {}
     void increaseBy(int howMuch) { m_currentEnergy += howMuch; }
     int consumeAtMost(int howMuch) {
-        if (howMuch < m_currentEnergy) {
-            m_currentEnergy -= howMuch;
-            return howMuch;
-        } else {
-            return std::exchange(m_currentEnergy, 0);
-        }
+        int actualConsumed = std::min(howMuch, m_currentEnergy);
+        m_currentEnergy -= actualConsumed;
+        return actualConsumed;
     }
 };
 
 class Pheremone final : public EnergyHolder {
 public:
     Pheremone(StudentWorld& sw, Coord c, int type)
-      : EnergyHolder(256, sw, typeToIID(type), c, right, 2), m_type(type) {}
+      : EnergyHolder(256, sw, typeToIID(type), c, right, 2) {}
     void increaseBy(int howMuch) { m_currentEnergy = std::max(768, m_currentEnergy + howMuch); }
 
 private:
-    int m_type;
     static int typeToIID(int type) {
         static_assert(IID_PHEROMONE_TYPE0 + 1 == IID_PHEROMONE_TYPE1, "Unexpected IID_PHEROMONE_TYPE1 index");
         static_assert(IID_PHEROMONE_TYPE0 + 2 == IID_PHEROMONE_TYPE2, "Unexpected IID_PHEROMONE_TYPE2 index");
@@ -159,14 +155,15 @@ public:
 class Ant final : public Insect {
 public:
     Ant(StudentWorld& sw, Coord c, int type, Compiler const& comp)
-      : Insect(1500, sw, typeToIID(type), c), m_comp(comp), m_ic(0), m_type(type), m_rand(0), m_foodHeld(0),
+      : Insect(1500, sw, typeToIID(type), c), m_comp(comp), m_ic(0),  m_rand(0), m_foodHeld(0),
         m_isBlocked(false), m_isBitten(false) {}
     virtual void doSomething() override;
+    int getType() const { return m_iid - IID_ANT_TYPE0; }
 
 private:
     Compiler const& m_comp;
     size_t m_ic;
-    int m_type, m_rand, m_foodHeld;
+    int m_rand, m_foodHeld;
     bool m_isBlocked, m_isBitten;
     static int typeToIID(int type) {
         static_assert(IID_ANT_TYPE0 + 1 == IID_ANT_TYPE1, "Unexpected IID_ANT_TYPE1 index");

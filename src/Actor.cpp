@@ -132,13 +132,13 @@ bool Ant::evalIf(Compiler::Condition cond) const {
         for (auto const& actor : m_sw.getActorsAt(getCoord())) {
             int iid = actor.second->iid();
             if (iid == IID_ADULT_GRASSHOPPER || iid == IID_BABY_GRASSHOPPER ||
-                (iid >= IID_ANT_TYPE0 && iid <= IID_ANT_TYPE3 && m_type != iid - IID_ANT_TYPE0))
+                (iid >= IID_ANT_TYPE0 && iid <= IID_ANT_TYPE3 && m_iid != iid))
                 return true;
         }
         return false;
     case Compiler::Condition::i_am_standing_on_my_anthill:
-        for (auto const& actor : m_sw.getActorsAt(getCoord()))
-            if (actor.second->iid() == IID_ANT_HILL && static_cast<Anthill&>(*actor.second).getType() == m_type)
+        for (auto const& actor : m_sw.getActorsAt(getCoord(), IID_ANT_HILL))
+            if (static_cast<Anthill&>(*actor.second).getType() == this->getType())
                 return true;
         return false;
     case Compiler::Condition::i_am_standing_on_food: return !m_sw.getActorsAt(getCoord(), IID_FOOD).empty();
@@ -152,7 +152,7 @@ bool Ant::evalIf(Compiler::Condition cond) const {
         for (auto const& actor : m_sw.getActorsAt(nextLocation())) {
             int iid = actor.second->iid();
             if (iid == IID_POISON || iid == IID_ADULT_GRASSHOPPER || iid == IID_BABY_GRASSHOPPER ||
-                (iid >= IID_ANT_TYPE0 && iid <= IID_ANT_TYPE3 && m_type != iid - IID_ANT_TYPE0))
+                (iid >= IID_ANT_TYPE0 && iid <= IID_ANT_TYPE3 && m_iid != iid))
                 return true;
         }
         return false;
@@ -160,6 +160,7 @@ bool Ant::evalIf(Compiler::Condition cond) const {
     case Compiler::Condition::i_was_blocked_from_moving: return m_isBlocked;
     case Compiler::Condition::invalid_if: assert(false && "invalid if condition in compiled Ant instructions");
     }
+    assert(false && "unknown if condition in compiled Ant instructions");
 }
 
 bool Ant::evalInstr() {
@@ -194,7 +195,7 @@ bool Ant::evalInstr() {
     case Compiler::Opcode::bite: {
         auto insectsHere = findOtherInsectsHere();
         insectsHere.erase(std::remove_if(insectsHere.begin(), insectsHere.end(),
-                                         [this](Insect* i) { return i->iid() == IID_ANT_TYPE0 + m_type; }),
+                                         [this](Insect* i) { return i->iid() == m_iid; }),
                           insectsHere.end());
         if (!insectsHere.empty()) insectsHere[randInt(0, insectsHere.size() - 1)]->beBitten(15);
         return false;
@@ -203,7 +204,7 @@ bool Ant::evalInstr() {
         m_foodHeld += attemptConsumeAtMostFood(std::min(400, 1800 - m_foodHeld));
         return false;
     case Compiler::Opcode::emitPheromone:
-        increaseEnergyOrNewObject<Pheremone>(IID_PHEROMONE_TYPE0 + m_type, 256);
+        increaseEnergyOrNewObject<Pheremone>(IID_PHEROMONE_TYPE0 + getType(), 256);
         return false;
     case Compiler::Opcode::faceRandomDirection: setDirection(randomDirection()); return false;
     case Compiler::Opcode::generateRandomNumber: {
@@ -223,6 +224,7 @@ bool Ant::evalInstr() {
         setDirection(static_cast<Direction>((getDirection() - up + 3) % 4 + up));
         return false;
     case Compiler::Opcode::label: assert(false && "unresolved label in compiled Ant instructions");
-    case Compiler::Opcode::invalid: assert(false && "unknown instruction in compiled Ant instructions");
+    case Compiler::Opcode::invalid: assert(false && "invalid instruction in compiled Ant instructions");
     }
+    assert(false && "unknown instruction in compiled Ant instructions");
 }
