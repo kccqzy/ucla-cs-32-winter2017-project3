@@ -118,12 +118,11 @@ std::vector<Insect*> Insect::findOtherInsectsHere() const {
     auto actorsHere = m_sw.getActorsAt(getCoord());
     std::vector<Insect*> insectsHere; // TODO use better search
     for (auto const& actor : actorsHere) {
-        if (actor.second.get() != this && !actor.second->isDead()) {
-            int iid = actor.second->iid();
-            if (iid == IID_ADULT_GRASSHOPPER || iid == IID_BABY_GRASSHOPPER ||
-                (iid >= IID_ANT_TYPE0 && iid <= IID_ANT_TYPE3))
-                insectsHere.emplace_back(static_cast<Insect*>(actor.second.get()));
-        }
+        int iid = actor.second->iid();
+        if ((iid == IID_ADULT_GRASSHOPPER || iid == IID_BABY_GRASSHOPPER ||
+             (iid >= IID_ANT_TYPE0 && iid <= IID_ANT_TYPE3)) &&
+            actor.second.get() != this && !actor.second->isDead())
+            insectsHere.emplace_back(static_cast<Insect*>(actor.second.get()));
     }
     return insectsHere;
 }
