@@ -106,11 +106,10 @@ public:
         bool empty() const { return first == second; }
         ActorRange(RawActorRange const& p) : RawActorRange(p) {}
     };
-    template<typename CoordOrKey>
-    ActorRange getActorsAt(CoordOrKey c) {
-        return actors.equal_range(c);
+    template<typename K, typename... T>
+    ActorRange getActorsAt(K k, T... t) {
+        return actors.equal_range(std::tuple_cat(k, std::make_tuple(t...)));
     }
-    ActorRange getActorsAt(Coord c, int iid) { return actors.equal_range(std::tuple_cat(c, std::make_tuple(iid))); }
 
     template<typename Actor, typename... Args>
     void insertActorAtEndOfTick(Args&&... args) {
