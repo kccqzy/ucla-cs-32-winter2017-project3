@@ -208,9 +208,12 @@ public:
         if (!isDead() && randInt(0, 1)) {
             // Retaliate.
             auto insectsHere = findOtherInsectsHere();
-            // There must be another insect here.
-            assert(!insectsHere.empty());
-            insectsHere[randInt(0, insectsHere.size() - 1)]->beBitten(50);
+            // Ideally because another insect has bitten this insect, the if
+            // condition is unnecessary. However, sometimes a grasshopper may
+            // have already moved, but can still be found via the old
+            // coordinates. Suppose this moved grasshopper was bitten, then when
+            // it retaliates it might not find other insects here.
+            if (!insectsHere.empty()) insectsHere[randInt(0, insectsHere.size() - 1)]->beBitten(50);
         }
     }
 
