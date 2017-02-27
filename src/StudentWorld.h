@@ -68,15 +68,12 @@ private:
         std::string name;
         Compiler compiler;
         int antCount;
-        int antCountTimestamp;
         AntColonyInfo(std::string const& name, Compiler&& compiler)
-          : name(name), compiler(std::move(compiler)), antCount(0), antCountTimestamp(0) {}
-        friend bool operator<(AntColonyInfo const& a, AntColonyInfo const& b) {
-            return std::make_tuple(a.antCount, -a.antCountTimestamp) <
-                   std::make_tuple(b.antCount, -b.antCountTimestamp);
-        }
+          : name(name), compiler(std::move(compiler)), antCount(0) {}
+        friend bool operator<(AntColonyInfo const& a, AntColonyInfo const& b) { return a.antCount < b.antCount; }
     };
     std::vector<AntColonyInfo> antInfo;
+    int currentWinningAnt;
 
     template<typename Actor, typename... Args>
     void insertActor(int x, int y, Args&&... args) {
@@ -87,23 +84,18 @@ private:
     void setStatusText() {
         std::ostringstream oss;
         oss << "Ticks:" << std::right << std::setw(5) << (2000 - ticks);
-        if (!antInfo.empty()) {
-            auto m = std::max_element(antInfo.begin(), antInfo.end());
-            assert(m != antInfo.end());
-            auto n = std::max_element(m + 1, antInfo.end());
-            int winningAnt = (n == antInfo.end() || *n < *m) ? m - antInfo.begin() : -1;
-            for (size_t i = 0; i < antInfo.size(); ++i) {
-                oss << (i ? "  " : " - ") << antInfo[i].name;
-                if ((int) i == winningAnt) oss << '*';
-                oss << ": " << std::setfill('0') << std::setw(2) << antInfo[i].antCount << " ants";
-                // Do not distinguish between plural and singular forms. This is intentional.
-            }
+        for (size_t i = 0; i < antInfo.size(); ++i) {
+            oss << (i ? "  " : " - ") << antInfo[i].name;
+            if ((int) i == currentWinningAnt) oss << '*';
+            oss << ": " << std::setfill('0') << std::setw(2) << antInfo[i].antCount << " ants";
+            // Do not distinguish between plural and singular forms. This is intentional.
         }
         setGameStatText(oss.str());
     }
 
 public:
-    StudentWorld(std::string assetDir) : GameWorld(assetDir), actors{}, ticks(0), newActors{}, antInfo{} {}
+    StudentWorld(std::string assetDir)
+      : GameWorld(assetDir), actors{}, ticks(0), newActors{}, antInfo{}, currentWinningAnt{-1} {}
     virtual int init() override;
     virtual int move() override;
     virtual void cleanUp() override;
@@ -129,8 +121,11 @@ public:
         // The winner is defined as one that produced more ants than its
         // competitors, or if there is a tie, the colony that produced the most
         // ants first.
-        antInfo[t].antCount++;
-        antInfo[t].antCountTimestamp = ticks;
+        if (++antInfo[t].antCount >= 6 &&
+            (currentWinningAnt == -1 || antInfo[t].antCount > antInfo[currentWinningAnt].antCount))
+            // Current ant colony has produced enough ants, and either there is no winning ant or this colony has more
+            // winning ants.
+            currentWinningAnt = t;
     }
 };
 
