@@ -98,7 +98,13 @@ int StudentWorld::move() {
     }
 
     setStatusText();
-    return ticks < 2000 ? GWSTATUS_CONTINUE_GAME : GWSTATUS_NO_WINNER;
+    if (ticks < 2000)
+        return GWSTATUS_CONTINUE_GAME;
+    else if (currentWinningAnt > -1) {
+        setWinner(antInfo[currentWinningAnt].name);
+        return GWSTATUS_PLAYER_WON;
+    } else
+        return GWSTATUS_NO_WINNER;
 }
 
 void StudentWorld::cleanUp() {
