@@ -12,12 +12,18 @@ int Actor::attemptConsumeAtMostFood(int maxEnergy) const {
     return 0;
 }
 
-template<typename A>
-void Actor::increaseEnergyOrNewObject(int iid, int howMuch) const {
+void Actor::addFoodHere(int howMuch) const {
     auto here = getCoord();
-    for (auto const& actor: m_sw.getActorsAt(here, iid))
-        return (void)static_cast<A&>(*actor.second).increaseBy(howMuch);
-    m_sw.insertActorAtEndOfTick<A>(here, howMuch);
+    for (auto const& actor : m_sw.getActorsAt(here, IID_FOOD))
+        return static_cast<Food&>(*actor.second).increaseBy(howMuch);
+    m_sw.insertActorAtEndOfTick<Food>(here, howMuch);
+}
+
+void Actor::addPheromoneHere(int type) const {
+    auto here = getCoord();
+    for (auto const& actor : m_sw.getActorsAt(here, IID_PHEROMONE_TYPE0 + type))
+        return static_cast<Food&>(*actor.second).increaseBy(256);
+    m_sw.insertActorAtEndOfTick<Food>(here, type);
 }
 
 void PoolOfWater::doSomething() {
@@ -66,7 +72,7 @@ void GrassHopper::consumeFoodAndMove() {
 void BabyGrassHopper::doSomething() {
     if (!burnEnergyAndSleep()) return; // Step 1--4
     if (m_currentEnergy >= 1600) {     // Step 5
-        increaseEnergyOrNewObject<Food>(IID_FOOD, 100);
+        addFoodHere(100);
         m_sw.insertActorAtEndOfTick<AdultGrassHopper>(getCoord());
         m_currentEnergy = 0;
     }
@@ -138,8 +144,7 @@ bool Ant::evalIf(Compiler::Condition cond) const {
         return false;
     case Compiler::Condition::i_am_standing_on_my_anthill:
         for (auto const& actor : m_sw.getActorsAt(getCoord(), IID_ANT_HILL))
-            if (static_cast<Anthill&>(*actor.second).getType() == this->getType())
-                return true;
+            if (static_cast<Anthill&>(*actor.second).getType() == this->getType()) return true;
         return false;
     case Compiler::Condition::i_am_standing_on_food: return !m_sw.getActorsAt(getCoord(), IID_FOOD).empty();
     case Compiler::Condition::i_smell_pheromone_in_front_of_me:
@@ -188,24 +193,22 @@ bool Ant::evalInstr() {
     }
     case Compiler::Opcode::dropFood:
         if (m_foodHeld) {
-            increaseEnergyOrNewObject<Food>(IID_FOOD, m_foodHeld);
+            addFoodHere(m_foodHeld);
             m_foodHeld = 0;
         }
         return false;
     case Compiler::Opcode::bite: {
         auto insectsHere = findOtherInsectsHere();
-        insectsHere.erase(std::remove_if(insectsHere.begin(), insectsHere.end(),
-                                         [this](Insect* i) { return i->iid() == m_iid; }),
-                          insectsHere.end());
+        insectsHere.erase(
+          std::remove_if(insectsHere.begin(), insectsHere.end(), [this](Insect* i) { return i->iid() == m_iid; }),
+          insectsHere.end());
         if (!insectsHere.empty()) insectsHere[randInt(0, insectsHere.size() - 1)]->beBitten(15);
         return false;
     }
     case Compiler::Opcode::pickupFood:
         m_foodHeld += attemptConsumeAtMostFood(std::min(400, 1800 - m_foodHeld));
         return false;
-    case Compiler::Opcode::emitPheromone:
-        increaseEnergyOrNewObject<Pheremone>(IID_PHEROMONE_TYPE0 + getType(), 256);
-        return false;
+    case Compiler::Opcode::emitPheromone: addPheromoneHere(getType()); return false;
     case Compiler::Opcode::faceRandomDirection: setDirection(randomDirection()); return false;
     case Compiler::Opcode::generateRandomNumber: {
         int operand1 = std::stoi(cmd.operand1);

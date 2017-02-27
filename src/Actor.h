@@ -16,7 +16,7 @@ protected:
     StudentWorld& m_sw;
     int m_iid;
     Actor(StudentWorld& sw, int iid, Coord c, Direction dir, unsigned depth)
-        : GraphObject(iid, std::get<0>(c), std::get<1>(c), dir, depth), m_sw(sw), m_iid(iid) {}
+      : GraphObject(iid, std::get<0>(c), std::get<1>(c), dir, depth), m_sw(sw), m_iid(iid) {}
     bool canMoveHere(Coord c) const;
     Coord nextLocation() const {
         switch (getDirection()) {
@@ -29,8 +29,8 @@ protected:
     }
     void moveTo(Coord c) { GraphObject::moveTo(std::get<0>(c), std::get<1>(c)); }
     int attemptConsumeAtMostFood(int maxEnergy) const;
-    template<typename A>
-    void increaseEnergyOrNewObject(int iid, int howMuch) const;
+    void addFoodHere(int howMuch) const;
+    void addPheromoneHere(int type) const;
     static auto randomDirection() { return static_cast<Direction>(randInt(up, left)); }
 
 public:
@@ -91,12 +91,12 @@ public:
 
 class Pheremone final : public EnergyHolder {
 public:
-    Pheremone(StudentWorld& sw, Coord c, int type)
-      : EnergyHolder(256, sw, typeToIID(type), c, right, 2) {}
+    Pheremone(StudentWorld& sw, Coord c, int type) : EnergyHolder(256, sw, typeToIID(type), c, right, 2) {}
     void increaseBy(int howMuch) { m_currentEnergy = std::max(768, m_currentEnergy + howMuch); }
 
 private:
     static int typeToIID(int type) {
+        assert(0 <= type && type < 4);
         static_assert(IID_PHEROMONE_TYPE0 + 1 == IID_PHEROMONE_TYPE1, "Unexpected IID_PHEROMONE_TYPE1 index");
         static_assert(IID_PHEROMONE_TYPE0 + 2 == IID_PHEROMONE_TYPE2, "Unexpected IID_PHEROMONE_TYPE2 index");
         static_assert(IID_PHEROMONE_TYPE0 + 3 == IID_PHEROMONE_TYPE3, "Unexpected IID_PHEROMONE_TYPE3 index");
@@ -108,7 +108,9 @@ private:
 class Anthill final : public EnergyHolder {
 public:
     Anthill(StudentWorld& sw, Coord c, int type, Compiler const& comp)
-      : EnergyHolder(8999, sw, IID_ANT_HILL, c, right, 2), m_comp(comp), m_type(type) {}
+      : EnergyHolder(8999, sw, IID_ANT_HILL, c, right, 2), m_comp(comp), m_type(type) {
+        assert(0 <= type && type < 4);
+    }
     int getType() const { return m_type; }
 
 private:
@@ -125,7 +127,7 @@ protected:
     bool m_hasBeenStunnedHere;
     bool burnEnergyAndSleep() {
         if (!--m_currentEnergy) { // Step 1, 2
-            increaseEnergyOrNewObject<Food>(IID_FOOD, 100);
+            addFoodHere(100);
             return false;
         }
         if (m_sleep) { // Step 3, 4
@@ -155,8 +157,8 @@ public:
 class Ant final : public Insect {
 public:
     Ant(StudentWorld& sw, Coord c, int type, Compiler const& comp)
-      : Insect(1500, sw, typeToIID(type), c), m_comp(comp), m_ic(0),  m_rand(0), m_foodHeld(0),
-        m_isBlocked(false), m_isBitten(false) {}
+      : Insect(1500, sw, typeToIID(type), c), m_comp(comp), m_ic(0), m_rand(0), m_foodHeld(0), m_isBlocked(false),
+        m_isBitten(false) {}
     virtual void doSomething() override;
     int getType() const { return m_iid - IID_ANT_TYPE0; }
 
@@ -166,6 +168,7 @@ private:
     int m_rand, m_foodHeld;
     bool m_isBlocked, m_isBitten;
     static int typeToIID(int type) {
+        assert(0 <= type && type < 4);
         static_assert(IID_ANT_TYPE0 + 1 == IID_ANT_TYPE1, "Unexpected IID_ANT_TYPE1 index");
         static_assert(IID_ANT_TYPE0 + 2 == IID_ANT_TYPE2, "Unexpected IID_ANT_TYPE2 index");
         static_assert(IID_ANT_TYPE0 + 3 == IID_ANT_TYPE3, "Unexpected IID_ANT_TYPE3 index");
