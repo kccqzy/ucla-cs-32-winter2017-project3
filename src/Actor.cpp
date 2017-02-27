@@ -83,7 +83,11 @@ void AdultGrassHopper::doSomething() {
     if (!burnEnergyAndSleep()) return; // Step 1--4
     if (!randInt(0, 2)) {              // Step 5
         auto insectsHere = findOtherInsectsHere();
-        if (!insectsHere.empty()) insectsHere[randInt(0, insectsHere.size() - 1)]->beBitten(50);
+        if (!insectsHere.empty()) {
+            insectsHere[randInt(0, insectsHere.size() - 1)]->beBitten(50);
+            m_sleep = 2;
+            return;
+        }
     }
     if (!randInt(0, 9)) { // Step 6
         auto openSquares = findOpenSquaresCenteredHere();
