@@ -60,7 +60,6 @@ int StudentWorld::init() {
 
 int StudentWorld::move() {
     ticks++;
-    newActors.clear();
 
     // Save a copy of all actors. It is unsafe to mutate a structure while
     // iterating through it. So we first obtain all iterators (nodes) inside a
@@ -77,24 +76,19 @@ int StudentWorld::move() {
     // up other actors by their keys, and it is necessary therefore to do
     // maintenance after every single doSomething().
     for (auto const& i : allCurrentActors) {
-        if (!i->second->isDead()) {
-            auto oldKey = i->second->getKey();
-            i->second->doSomething();
-            if (i->second->isDead()) {
-                actors.erase(i);
-            } else {
-                auto newKey = i->second->getKey();
-                if (newKey != oldKey) {
-                    auto p = std::move(i->second);
-                    actors.erase(i);
-                    actors.emplace(newKey, std::move(p));
-                }
-            }
-            for (auto& i : newActors) { actors.emplace(i->getKey(), std::move(i)); }
-            newActors.clear();
-        } else {
+        if (!i->second->isDead()) i->second->doSomething();
+        if (i->second->isDead()) {
             actors.erase(i);
+        } else {
+            auto newKey = i->second->getKey();
+            if (newKey != i->first) {
+                auto p = std::move(i->second);
+                actors.erase(i);
+                actors.emplace(newKey, std::move(p));
+            }
         }
+        for (auto& i : newActors) { actors.emplace(i->getKey(), std::move(i)); }
+        newActors.clear();
     }
 
     setStatusText();
