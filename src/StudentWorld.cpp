@@ -62,30 +62,40 @@ int StudentWorld::move() {
     ticks++;
     newActors.clear();
 
-    // Ask actors to doSomething.
-    for (auto const& i : actors)
-        if (!i.second->isDead()) i.second->doSomething();
+    // Save a copy of all actors. It is unsafe to mutate a structure while
+    // iterating through it. So we first obtain all iterators (nodes) inside a
+    // map. This ensures that: (a) we only perform doSomething() on actors
+    // present at the beginning of the tick, not newly created ones; (b) the
+    // order of doSomething() is well-defined.
+    std::vector<ActorMap::iterator> allCurrentActors;
+    allCurrentActors.reserve(actors.size());
+    for (auto i = actors.begin(), ie = actors.end(); i != ie; ++i) allCurrentActors.emplace_back(i);
 
-    // Remove dead, move moved, and add new actors.
-    std::vector<std::pair<ActorKey, ActorMap::iterator>> movedActors;
-    std::vector<ActorMap::const_iterator> deadActors;
-    for (auto i = actors.begin(), ie = actors.end(); i != ie; ++i) {
-        if (i->second->isDead()) {
-            deadActors.emplace_back(i);
+    // Ask actors to doSomething. Immediately after each actor does something,
+    // we perform data structure maintenance to make sure the data structure is
+    // in sync. This is necessary because actors in their doSomething() can look
+    // up other actors by their keys, and it is necessary therefore to do
+    // maintenance after every single doSomething().
+    for (auto const& i : allCurrentActors) {
+        if (!i->second->isDead()) {
+            auto oldKey = i->second->getKey();
+            i->second->doSomething();
+            if (i->second->isDead()) {
+                actors.erase(i);
+            } else {
+                auto newKey = i->second->getKey();
+                if (newKey != oldKey) {
+                    auto p = std::move(i->second);
+                    actors.erase(i);
+                    actors.emplace(newKey, std::move(p));
+                }
+            }
+            for (auto& i : newActors) { actors.emplace(i->getKey(), std::move(i)); }
+            newActors.clear();
         } else {
-            auto newLocation = i->second->getKey();
-            if (i->first != newLocation) { movedActors.emplace_back(newLocation, i); }
+            actors.erase(i);
         }
     }
-    for (auto const& i : deadActors)
-        if (i->second->isDead()) actors.erase(i);
-    for (auto const& i : movedActors) {
-        auto val = std::move(i.second->second);
-        actors.erase(i.second);
-        actors.emplace(i.first, std::move(val));
-    }
-    for (auto& i : newActors) { actors.emplace(i->getKey(), std::move(i)); }
-    newActors.clear();
 
     setStatusText();
     return ticks < 2000 ? GWSTATUS_CONTINUE_GAME : GWSTATUS_NO_WINNER;
