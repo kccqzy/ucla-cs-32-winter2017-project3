@@ -1,5 +1,5 @@
 CXX=/usr/local/opt/llvm/bin/clang++
-CXXFLAGS=-Wall -Wextra -Wno-deprecated-declarations -O1 -fno-rtti -fno-exceptions -march=native -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -g -std=c++14 -stdlib=libc++ -MMD
+CXXFLAGS=-Wall -Wextra -Wno-deprecated-declarations -O0 -fno-rtti -fno-exceptions -march=native -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -g -std=c++14 -stdlib=libc++ -MMD
 VPATH=src
 
 .PHONY: clean regen
