@@ -104,7 +104,8 @@ std::vector<Coord> AdultGrassHopper::findOpenSquaresCenteredHere() const {
     int maxX = std::min(VIEW_WIDTH - 2, x0 + radius), maxY = std::min(VIEW_HEIGHT - 2, y0 + radius);
     for (int x = minX; x <= maxX; ++x)
         for (int y = minY; y <= maxY; ++y)
-            if ((x || y) && (x - x0) * (x - x0) + (y - y0) * (y - y0) <= radius * radius && canMoveHere({x, y}))
+            if ((x != x0 || y != y0) && (x - x0) * (x - x0) + (y - y0) * (y - y0) <= radius * radius &&
+                canMoveHere({x, y}))
                 rv.emplace_back(x, y);
     return rv;
 }
