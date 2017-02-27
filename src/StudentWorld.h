@@ -81,7 +81,7 @@ private:
         actors.emplace(p->getKey(), std::move(p));
     }
 
-    void setStatusText() {
+    std::string makeStatusText() const {
         std::ostringstream oss;
         oss << "Ticks:" << std::right << std::setw(5) << (2000 - ticks);
         for (size_t i = 0; i < antInfo.size(); ++i) {
@@ -90,7 +90,7 @@ private:
             oss << ": " << std::setfill('0') << std::setw(2) << antInfo[i].antCount << " ants";
             // Do not distinguish between plural and singular forms. This is intentional.
         }
-        setGameStatText(oss.str());
+        return oss.str();
     }
 
 public:

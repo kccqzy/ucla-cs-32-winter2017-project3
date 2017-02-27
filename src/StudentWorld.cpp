@@ -91,7 +91,7 @@ int StudentWorld::move() {
         newActors.clear();
     }
 
-    setStatusText();
+    setGameStatText(makeStatusText());
     if (ticks < 2000)
         return GWSTATUS_CONTINUE_GAME;
     else if (currentWinningAnt > -1) {
