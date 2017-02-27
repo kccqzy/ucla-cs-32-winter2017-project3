@@ -58,7 +58,7 @@ class StudentWorld final : public GameWorld {
 private:
     typedef std::tuple<int, int, int> ActorKey;
     typedef std::multimap<ActorKey, std::unique_ptr<Actor>, TupleComp<std::tuple_size<ActorKey>::value>> ActorMap;
-    typedef std::pair<ActorMap::iterator, ActorMap::iterator> RawActorRange;
+    typedef std::pair<ActorMap::const_iterator, ActorMap::const_iterator> RawActorRange;
 
     ActorMap actors;
     int ticks;
@@ -101,13 +101,13 @@ public:
     virtual void cleanUp() override;
 
     struct ActorRange : private RawActorRange {
-        ActorMap::iterator begin() const { return first; }
-        ActorMap::iterator end() const { return second; }
+        auto begin() const { return first; }
+        auto end() const { return second; }
         bool empty() const { return first == second; }
         ActorRange(RawActorRange const& p) : RawActorRange(p) {}
     };
     template<typename K, typename... T>
-    ActorRange getActorsAt(K k, T... t) {
+    ActorRange getActorsAt(K k, T... t) const {
         return actors.equal_range(std::tuple_cat(k, std::make_tuple(t...)));
     }
 
