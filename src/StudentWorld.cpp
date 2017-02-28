@@ -91,6 +91,14 @@ int StudentWorld::move() {
         newActors.clear();
     }
 
+    // Final garbage collection pass. An earlier actor may have become dead
+    // through the actions of a later actor.
+    for (auto i = actors.begin(); i != actors.end();)
+        if (i->second->isDead())
+            i = actors.erase(i);
+        else
+            ++i;
+
     setGameStatText(makeStatusText());
     if (ticks < 2000)
         return GWSTATUS_CONTINUE_GAME;
@@ -105,4 +113,5 @@ void StudentWorld::cleanUp() {
     actors.clear();
     newActors.clear();
     antInfo.clear();
+    currentWinningAnt = -1;
 }
