@@ -22,8 +22,8 @@ void Actor::addFoodHere(int howMuch) const {
 void Actor::addPheromoneHere(int type) const {
     auto here = getCoord();
     for (auto const& actor : m_sw.getActorsAt(here, IID_PHEROMONE_TYPE0 + type))
-        return static_cast<Food&>(*actor.second).increaseBy(256);
-    m_sw.insertActor<Food>(here, type);
+        return static_cast<Pheromone&>(*actor.second).increaseBy(256);
+    m_sw.insertActor<Pheromone>(here, type);
 }
 
 void PoolOfWater::doSomething() {
