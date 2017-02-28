@@ -32,11 +32,11 @@ protected:
     void addFoodHere(int howMuch) const;
     void addPheromoneHere(int type) const;
     static auto randomDirection() { return static_cast<Direction>(randInt(up, left)); }
+    Coord getCoord() const { return std::make_tuple(getX(), getY()); }
 
 public:
     virtual void doSomething() = 0;
     int iid() const { return m_iid; }
-    Coord getCoord() const { return std::make_tuple(getX(), getY()); }
     std::tuple<int, int, int> getKey() const { return std::make_tuple(getX(), getY(), iid()); }
     virtual bool isDead() const { return false; } // TODO are non energyholders always not dead?
     virtual void beStunned() {}
