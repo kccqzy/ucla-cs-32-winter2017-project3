@@ -94,9 +94,9 @@ public:
     }
 };
 
-class Pheremone final : public EnergyHolder {
+class Pheromone final : public EnergyHolder {
 public:
-    Pheremone(StudentWorld& sw, Coord c, int type) : EnergyHolder(256, sw, typeToIID(type), c, right, 2) {}
+    Pheromone(StudentWorld& sw, Coord c, int type) : EnergyHolder(256, sw, typeToIID(type), c, right, 2) {}
     void increaseBy(int howMuch) { m_currentEnergy = std::max(768, m_currentEnergy + howMuch); }
 
 private:
