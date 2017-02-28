@@ -1,0 +1,279 @@
+% CS32 Project 3 Report (Draft)
+
+# Classes and Their Public Member Functions
+
+## The `StudentWorld` Class
+
+Excluding the constructor, here are the public member functions in the
+`StudentWorld` class:
+
+-   `virtual int init() override`{.cpp}
+
+    This function is used for initialize the `StudentWorld` state, which
+    includes reading and parsing the field description and the ant programs,
+    constructing `Actor` objects. When everything is fine, it returns
+    `GWSTATUS_CONTINUE_GAME` to signal that the simulation can begin;
+    otherwise it returns `GWSTATUS_LEVEL_ERROR` to report the error.
+
+    This member function is virtual and overrides the pure virtual member
+    function in the `GameWorld` class.
+
+-   `virtual int move() override`{.cpp}
+
+    This function is used for mutating the simulated `StudentWorld` state once
+    in a single tick. Every actor that is present at the beginning of tick and
+    is alive when it is their turn is given a chance to `doSomething()`. The
+    order of the actors is well-defined: regardless of whether the actor has
+    moved in this tick, actors whose $x$--$y$ coordinates *at the beginning of
+    the tick* come first will always have an earlier chance to
+    `doSomething()`; when two actors are at the same location at the beginning
+    of the tick, the actor whose image ID is numerically smaller will always
+    have an earlier chance to `doSomething()`; finally for two actors with the
+    same location and image ID, the actor that occupies the cell earlier will
+    be given an earlier chance to `doSomething()`. See the section on Design
+    Decisions for details.
+
+    In addition, this function performs other auxiliary tasks such as
+    incrementing the tick, updating the status text, garbage-collects dead
+    actors, and ending the simulation when the tick reaches 2,000.
+
+    This member function is virtual and overrides the pure virtual member
+    function in the `GameWorld` class.
+
+-   `virtual void cleanUp() override`{.cpp}
+
+    This function performs clean up at the end of simulation. It destructs all
+    actor objects and resets the state of the `StudentWorld`.
+
+    This member function is virtual and overrides the pure virtual member
+    function in the `GameWorld` class.
+
+-   ```cpp
+    template<typename K, typename... T>
+    ActorRange getActorsAt(K k, T... t) const
+    ```
+
+    This function is used for looking up actors given a particular location,
+    or optionally a location and an image ID. It returns an `ActorRange`,
+    which exposes `const_iterator`s to the underlying container used by
+    `StudentWorld` to store `Actor`s.
+
+    This function is designed to be called from the `Actor` class or its
+    descendants.
+
+    It is not virtual because `StudentWorld` expects no derived classes and it
+    will not be overridden.
+
+-   ```cpp
+    template<typename Actor, typename... Args>
+    void insertActor(Args&&... args)
+    ```
+
+    This function is used for inserting new actors. Instead of taking a
+    pointer to `Actor`, it takes the arguments to be passed to the
+    constructor, except for the `StudentWorld` `this` pointer.
+
+    This function is designed to be called from the `Actor` class or its
+    descendants. It is also called by `init()` while setting up the field
+    during initialization.
+
+    It is not virtual because `StudentWorld` expects no derived classes and it
+    will not be overridden.
+
+-   `void increaseAntCountForColony(int t)`{.cpp}
+
+    This function is used for incrementing the number of ants produced by a
+    colony.
+
+    This function is designed to be called from the `Actor` class or its
+    descendants.
+
+    It is not virtual because `StudentWorld` expects no derived classes and it
+    will not be overridden.
+
+## The `Actor` Class
+
+The `Actor` class is the base class for all actors. It has these public member
+functions:
+
+-   `virtual void doSomething() = 0`{.cpp}
+
+    This pure virtual function is called by `StudentWorld::move()`{.cpp} to
+    let each actor perform its action during a tick.
+
+    It is defined to be pure virtual because each `Actor` has different
+    behavior when doing something.
+
+-   `int iid() const`{.cpp}
+
+    This function allows anyone to determine the image ID of the current
+    actor. Despite its name, besides specifying a kind of image to display on
+    the screen, the image ID provides an efficient way to distinguish between
+    different derived classes of an `Actor`.
+
+    It is not virtual because it does not need to be overridden.
+
+-   `std::tuple<int, int, int> getKey() const`{.cpp}
+
+    This function returns the sort key for the current actor. All `Actor`s are
+    sorted according to this key. It comprises the $x$, $y$ coordinates and
+    the image ID. See the section on Design Decisions for details.
+
+    It is not virtual because it does not need to be overridden.
+
+-   `virtual bool isDead() const`{.cpp}
+
+    This function determines whether or not the current actor is dead. It can
+    be called by other member functions in the `Actor` hierarchy, but it is
+    also called by `StudentWorld::move()` to determine which actors need to be
+    deleted.
+
+    It is defined as virtual because the default behavior, namely that actors
+    are always not dead, should be overridden for energy-holders.
+
+-   `virtual void beStunned()`{.cpp}
+
+-   `virtual void bePoisoned()`{.cpp}
+
+-   `virtual void beBitten(int damage)`{.cpp}
+
+    The three functions above are called when an actor is stunned, poisoned,
+    or bitten, respectively. The default behavior is to do nothing.
+
+    They are defined as virtual because certain insects have different
+    behavior when they are stunned, poisoned, or bitten.
+
+    They however are defined here so that the caller need not first test
+    whether a particular `Actor` can in fact be stunned, poisoned, or bitten.
+
+## The `Pebble` Class
+
+The `Pebble` class represents pebbles.
+
+Besides the constructor, which constructs a `Pebble` object with an associated
+`StudentWorld` and a location, it has no public member functions.
+
+## The `PoolOfWater` Class
+
+The `PoolOfWater` class represents pools of water.
+
+Besides the constructor, which constructs a `PoolOfWater` object with an
+associated `StudentWorld` and a location, it has no public member functions.
+
+## The `Poison` Class
+
+The `Poison` class represents poisons.
+
+Besides the constructor, which constructs a `Poison` object with an
+associated `StudentWorld` and a location, it has no public member functions.
+
+## The `EnergyHolder` Class
+
+The `EnergyHolder` class represents actors that have an energy content, also
+known as hit-points.
+
+It has no public member functions.
+
+## The `Food` Class
+
+The `Food` class represents piles of food.
+
+Besides the constructor, it has these public member functions:
+
+-   `void increaseBy(int howMuch)`{.cpp}
+
+    This function allows some other `Actor` to add some energy content
+    to the pile of food. For example, `Ant`s can deposit their held food, or
+    when insects die they also create food.
+
+    It is not defined to be virtual because no other classes will derive from
+    `Food` and override it.
+
+-   `int consumeAtMost(int howMuch)`{.cpp}
+
+    This function allows some other `Actor` to consume some energy content
+    within the pile of food. It takes an argument specifying the maximum to
+    consume, and returns the amount actually consumed.
+
+    It is not defined to be virtual because no other classes will derive from
+    `Food` and override it.
+
+## The `Pheromone` Class
+
+The `Pheromone` class represents a type of pheromone emitted by an `Ant` from
+a specific colony.
+
+Besides the constructor, which constructs a `Pheromone` object with an
+associated `StudentWorld`, a location, and the colony number of the ant that
+produced it, it has only one public member function:
+
+-   `void increaseBy(int howMuch)`{.cpp}
+
+    This function allows an `Ant` to add some energy content to the pheromone.
+    Specifically, an `Ant` can emit pheromone, and if there is already a
+    `Pheromone` object at the location the `Ant` decides to emit the
+    pheromone, the energy content is simply added to this existing pheromone.
+    It is similar to the similarly function in `Food`, but it does additional
+    checking to make sure it has no more than 768 units.
+
+    It is not defined to be virtual because no other classes will derive from
+    `Pheromone` and override it.
+
+## The `Anthill` Class
+
+The `Anthill` class represents the anthill, the birthplace and home of an
+`Ant` from a specific colony.
+
+Besides the constructor, which constructs an `Anthill` object with an
+associated `StudentWorld`, a location, the colony number, and a reference to a
+`Compiler`, it has one public member function:
+
+-   `void increaseBy(int howMuch)`{.cpp}
+
+    This function is similar to the similarly function in `Food` in that it
+    also increases the energy content to the pheromone, but it does additional
+    checking to make sure it has no more than 768 units.
+
+## The `Insect` Class
+
+The `Insect` class serves as a base class for the three kinds of insects,
+namely ants, baby grasshoppers and adult grasshoppers. It has some protected
+member functions for common behavior. It however has no public member
+functions.
+
+## The `Ant` Class
+
+The `Ant` class represents ants. Its public constructor takes a reference to
+the `StudentWorld` in which the ant lives, the location, the ant colony
+number, and a reference to the `Compiler`. Besides the constructor, it has no
+public member functions.
+
+## The `Grasshopper` Class
+
+The `Grasshopper` class serves as a base class for the two kinds of
+grasshoppers. It captures their common behavior of consuming some food and
+then moving. It has no public member functions, not even the constructor.
+
+## The `BabyGrasshopper` Class
+
+The `BabyGrasshopper` class represents baby grasshoppers. Besides the
+constructor, which constructs a baby grasshopper with a reference to the
+`StudentWorld` and its location, it has no public member functions.
+
+## The `AdultGrasshopper` Class
+
+The `AdultGrasshopper` class represents adult grasshoppers. Besides the
+constructor, which constructs an adult grasshopper with a reference to the
+`StudentWorld` and its location, it has no public member functions.
+
+# Unfinished Features and Known Bugs
+
+None.
+
+# Design Decisions and Assumptions
+
+Yet to be written.
+
+# Testing
+
+None.
