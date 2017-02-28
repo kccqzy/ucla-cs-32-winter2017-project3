@@ -20,18 +20,10 @@ Excluding the constructor, here are the public member functions in the
 
 -   `virtual int move() override`{.cpp}
 
-    This function is used for mutating the simulated `StudentWorld` state once
-    in a single tick. Every actor that is present at the beginning of tick and
-    is alive when it is their turn is given a chance to `doSomething()`. The
-    order of the actors is well-defined: regardless of whether the actor has
-    moved in this tick, actors whose $x$--$y$ coordinates *at the beginning of
-    the tick* come first will always have an earlier chance to
-    `doSomething()`; when two actors are at the same location at the beginning
-    of the tick, the actor whose image ID is numerically smaller will always
-    have an earlier chance to `doSomething()`; finally for two actors with the
-    same location and image ID, the actor that occupies the cell earlier will
-    be given an earlier chance to `doSomething()`. See the section on Design
-    Decisions for details.
+    This function is used for calling `doSomething()` for each actor that is
+    present at the beginning of the tick and alive during its turn in the
+    simulated `StudentWorld` state once in a single tick. See the section on
+    Design Decisions for details.
 
     In addition, this function performs other auxiliary tasks such as
     incrementing the tick, updating the status text, garbage-collects dead
@@ -228,11 +220,12 @@ Besides the constructor, which constructs an `Anthill` object with an
 associated `StudentWorld`, a location, the colony number, and a reference to a
 `Compiler`, it has one public member function:
 
--   `void increaseBy(int howMuch)`{.cpp}
+-   `int getType() const`{.cpp}
 
-    This function is similar to the similarly function in `Food` in that it
-    also increases the energy content to the pheromone, but it does additional
-    checking to make sure it has no more than 768 units.
+    This function returns the colony number of the anthill.
+
+    It is not defined to be virtual because no other classes will derive from
+    `Anthill` and override it.
 
 ## The `Insect` Class
 
@@ -272,7 +265,68 @@ None.
 
 # Design Decisions and Assumptions
 
-Yet to be written.
+## Ordering of Events
+
+The specification does not mention the ordering of events (`doSomething()` by
+actors. Indeed it can only be inferred that each tick serves as the smallest
+unit of time interval and is a synchronization point for all events. This
+serves as a global clock and this establishes a *strict partial order* for all
+events.
+
+For issues of consistency and determinism (barring the random number
+generator), we want the following three intuitive properties to hold:
+
+-   Every actor that is present at the beginning of tick and alive when it is
+    their turn is given one and only one chance to `doSomething()` in this
+    tick.
+
+-   There is a *total order* of events, that is for any two events, exactly
+    one of them happens-before the other one, including all externally
+    observable side effects of these events.
+
+-   The exact happen-before relationship between any two events even in the
+    same tick should be predictable given knowledge of the history of the
+    `StudentWorld` state.
+
+To achieve the first property, references (iterators in fact) to the actors
+present at the beginning of a tick are saved and it is these iterators that
+are being iterated through.
+
+To achieve the second property, some total ordering must be chosen. In this
+design, the following ordering is used:
+
+-   Regardless of whether the actor has moved in this tick, actors whose
+    $x$--$y$ coordinates *at the beginning of the tick* is smaller will have
+    its `doSomething()` scheduled before other actors;
+
+-   When two actors are at the same location at the beginning of the tick, the
+    actor whose image ID is numerically smaller will have its `doSomething()`
+    scheduled before other actors at the same location;
+
+-   When two actors are the same location and have the same image ID, the
+    actor that occupies the current location earlier will have its
+    `doSomething()` scheduled before other actors at the same location and of
+    the same image ID.
+
+This will resolve ambiguities in situations such as two insects occupying the
+same location as a pile of food. It also allows the following convenient
+property:
+
+**Property (Time Invariance of Ordering of Immobile Actors)**. For any two
+actors that do not move within a time period, the relative ordering of their
+`doSomething()` remains unchanged.
+
+To achieve the third property, (almost) all side effects effected by an actor
+is committed immediately after its `doSomething()` has completed. This
+includes, for example, that if an actor has chosen to move, the data structure
+that keeps track of locations will immediately update after the
+`doSomething()` has completed, so that even if a later actor tries to search
+for actors at the new location, it will discover the earlier actor, and if it
+tries to search for actors at the earlier location, it will not discover the
+earlier actor. This is necessary to achieve, for example, the following
+intuitive behavior: *for every adult grasshopper that was bitten, there exists
+at least one other insect to retaliate at the same coordinate as the bitten
+adult grasshopper*.
 
 # Testing
 
