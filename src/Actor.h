@@ -47,18 +47,24 @@ public:
 class Pebble final : public Actor {
 public:
     Pebble(StudentWorld& sw, Coord c) : Actor(sw, IID_ROCK, c, right, 1) {}
+
+private:
     virtual void doSomething() override {}
 };
 
 class PoolOfWater final : public Actor {
 public:
     PoolOfWater(StudentWorld& sw, Coord c) : Actor(sw, IID_WATER_POOL, c, right, 2) {}
+
+private:
     virtual void doSomething() override;
 };
 
 class Poison final : public Actor {
 public:
     Poison(StudentWorld& sw, Coord c) : Actor(sw, IID_POISON, c, right, 2) {}
+
+private:
     virtual void doSomething() override;
 };
 
@@ -68,8 +74,6 @@ protected:
     template<typename... Args>
     EnergyHolder(int initialEnergy, Args&&... args)
       : Actor(std::forward<Args>(args)...), m_currentEnergy{initialEnergy} {}
-
-public:
     virtual bool isDead() const override {
         assert(m_currentEnergy >= 0);
         return !m_currentEnergy;
@@ -77,9 +81,11 @@ public:
 };
 
 class Food final : public EnergyHolder {
+private:
+    virtual void doSomething() override {}
+
 public:
     Food(StudentWorld& sw, Coord c, int energy) : EnergyHolder(energy, sw, IID_FOOD, c, right, 2) {}
-    virtual void doSomething() override {}
     void increaseBy(int howMuch) { m_currentEnergy += howMuch; }
     int consumeAtMost(int howMuch) {
         int actualConsumed = std::min(howMuch, m_currentEnergy);
@@ -141,8 +147,6 @@ protected:
         m_hasBeenStunnedHere = false;
     }
     std::vector<Insect*> findOtherInsectsHere() const;
-
-public:
     virtual void beStunned() override {
         if (!m_hasBeenStunnedHere) {
             m_hasBeenStunnedHere = true;
@@ -158,10 +162,9 @@ public:
     Ant(StudentWorld& sw, Coord c, int type, Compiler const& comp)
       : Insect(1500, sw, typeToIID(type), c), m_comp(comp), m_ic(0), m_rand(0), m_foodHeld(0), m_isBlocked(false),
         m_isBitten(false) {}
-    virtual void doSomething() override;
-    int getType() const { return m_iid - IID_ANT_TYPE0; }
 
 private:
+    virtual void doSomething() override;
     Compiler const& m_comp;
     size_t m_ic;
     int m_rand, m_foodHeld;
@@ -180,6 +183,7 @@ private:
         Insect::moveTo(c);
         m_isBitten = false;
     }
+    int getType() const { return m_iid - IID_ANT_TYPE0; }
 };
 
 class GrassHopper : public Insect {
@@ -193,12 +197,16 @@ protected:
 class BabyGrassHopper final : public GrassHopper {
 public:
     BabyGrassHopper(StudentWorld& sw, Coord c) : GrassHopper(500, sw, IID_BABY_GRASSHOPPER, c) {}
+
+private:
     virtual void doSomething() override;
 };
 
 class AdultGrassHopper final : public GrassHopper {
 public:
     AdultGrassHopper(StudentWorld& sw, Coord c) : GrassHopper(1600, sw, IID_ADULT_GRASSHOPPER, c) {}
+
+private:
     virtual void doSomething() override;
     virtual void beStunned() override {}
     virtual void bePoisoned() override {}
@@ -208,11 +216,9 @@ public:
             // Retaliate.
             auto insectsHere = findOtherInsectsHere();
             assert(!insectsHere.empty());
-            insectsHere[randInt(0, insectsHere.size() - 1)]->beBitten(50);
+            static_cast<Actor*>(insectsHere[randInt(0, insectsHere.size() - 1)])->beBitten(50);
         }
     }
-
-private:
     std::vector<Coord> findOpenSquaresCenteredHere() const;
 };
 

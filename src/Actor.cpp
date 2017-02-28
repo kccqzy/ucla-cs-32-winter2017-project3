@@ -84,7 +84,7 @@ void AdultGrassHopper::doSomething() {
     if (!randInt(0, 2)) {              // Step 5
         auto insectsHere = findOtherInsectsHere();
         if (!insectsHere.empty()) {
-            insectsHere[randInt(0, insectsHere.size() - 1)]->beBitten(50);
+            static_cast<Actor*>(insectsHere[randInt(0, insectsHere.size() - 1)])->beBitten(50);
             m_sleep = 2;
             return;
         }
@@ -206,7 +206,7 @@ bool Ant::evalInstr() {
         insectsHere.erase(
           std::remove_if(insectsHere.begin(), insectsHere.end(), [this](Insect* i) { return i->iid() == m_iid; }),
           insectsHere.end());
-        if (!insectsHere.empty()) insectsHere[randInt(0, insectsHere.size() - 1)]->beBitten(15);
+        if (!insectsHere.empty()) static_cast<Actor*>(insectsHere[randInt(0, insectsHere.size() - 1)])->beBitten(15);
         return false;
     }
     case Compiler::Opcode::pickupFood:
