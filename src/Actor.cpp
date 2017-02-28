@@ -47,7 +47,7 @@ void Anthill::doSomething() {
     }
 }
 
-void GrassHopper::consumeFoodAndMove() {
+void Grasshopper::consumeFoodAndMove() {
     if (int consumedFood = attemptConsumeAtMostFood(200)) { // Step 6 (baby) or 7 (adult)
         m_currentEnergy += consumedFood;
         if (randInt(0, 1)) { // Step 7 (baby) or 8 (adult)
@@ -69,17 +69,17 @@ void GrassHopper::consumeFoodAndMove() {
     m_sleep = 2; // Step 12 (baby) or 13 (adult)
 }
 
-void BabyGrassHopper::doSomething() {
+void BabyGrasshopper::doSomething() {
     if (!burnEnergyAndSleep()) return; // Step 1--4
     if (m_currentEnergy >= 1600) {     // Step 5
         addFoodHere(100);
-        m_sw.insertActor<AdultGrassHopper>(getCoord());
+        m_sw.insertActor<AdultGrasshopper>(getCoord());
         m_currentEnergy = 0;
     }
     consumeFoodAndMove(); // Steps 6--12
 }
 
-void AdultGrassHopper::doSomething() {
+void AdultGrasshopper::doSomething() {
     if (!burnEnergyAndSleep()) return; // Step 1--4
     if (!randInt(0, 2)) {              // Step 5
         auto insectsHere = findOtherInsectsHere();
@@ -100,7 +100,7 @@ void AdultGrassHopper::doSomething() {
     consumeFoodAndMove(); // Steps 7--13
 }
 
-std::vector<Coord> AdultGrassHopper::findOpenSquaresCenteredHere() const {
+std::vector<Coord> AdultGrasshopper::findOpenSquaresCenteredHere() const {
     int const radius = 10;
     std::vector<Coord> rv;
     int x0 = getX(), y0 = getY();

@@ -186,25 +186,25 @@ private:
     int getType() const { return m_iid - IID_ANT_TYPE0; }
 };
 
-class GrassHopper : public Insect {
+class Grasshopper : public Insect {
 protected:
     template<typename... Args>
-    GrassHopper(Args&&... args) : Insect(std::forward<Args>(args)...), m_distance(randInt(2, 10)) {}
+    Grasshopper(Args&&... args) : Insect(std::forward<Args>(args)...), m_distance(randInt(2, 10)) {}
     int m_distance;
     void consumeFoodAndMove();
 };
 
-class BabyGrassHopper final : public GrassHopper {
+class BabyGrasshopper final : public Grasshopper {
 public:
-    BabyGrassHopper(StudentWorld& sw, Coord c) : GrassHopper(500, sw, IID_BABY_GRASSHOPPER, c) {}
+    BabyGrasshopper(StudentWorld& sw, Coord c) : Grasshopper(500, sw, IID_BABY_GRASSHOPPER, c) {}
 
 private:
     virtual void doSomething() override;
 };
 
-class AdultGrassHopper final : public GrassHopper {
+class AdultGrasshopper final : public Grasshopper {
 public:
-    AdultGrassHopper(StudentWorld& sw, Coord c) : GrassHopper(1600, sw, IID_ADULT_GRASSHOPPER, c) {}
+    AdultGrasshopper(StudentWorld& sw, Coord c) : Grasshopper(1600, sw, IID_ADULT_GRASSHOPPER, c) {}
 
 private:
     virtual void doSomething() override;

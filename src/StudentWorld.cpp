@@ -44,7 +44,7 @@ int StudentWorld::init() {
                 case Field::FieldItem::water: insertActor<PoolOfWater>(c); break;
                 case Field::FieldItem::poison: insertActor<Poison>(c); break;
                 case Field::FieldItem::rock: insertActor<Pebble>(c); break;
-                case Field::FieldItem::grasshopper: insertActor<BabyGrassHopper>(c); break;
+                case Field::FieldItem::grasshopper: insertActor<BabyGrasshopper>(c); break;
                 case Field::FieldItem::food: insertActor<Food>(c, 6000); break;
                 case Field::FieldItem::anthill0: insertAnthill(c, 0); break;
                 case Field::FieldItem::anthill1: insertAnthill(c, 1); break;
