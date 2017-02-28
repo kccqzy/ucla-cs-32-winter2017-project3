@@ -34,7 +34,6 @@ protected:
     static auto randomDirection() { return static_cast<Direction>(randInt(up, left)); }
 
 public:
-    virtual ~Actor() {}
     virtual void doSomething() = 0;
     int iid() const { return m_iid; }
     Coord getCoord() const { return std::make_tuple(getX(), getY()); }
