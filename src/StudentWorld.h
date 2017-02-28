@@ -62,7 +62,6 @@ private:
 
     ActorMap actors;
     int ticks;
-    std::vector<std::unique_ptr<Actor>> newActors;
 
     struct AntColonyInfo {
         std::string name;
@@ -74,12 +73,6 @@ private:
     };
     std::vector<AntColonyInfo> antInfo;
     int currentWinningAnt;
-
-    template<typename Actor, typename... Args>
-    void insertActor(int x, int y, Args&&... args) {
-        auto p = std::make_unique<Actor>(*this, std::make_tuple(x, y), std::forward<Args>(args)...);
-        actors.emplace(p->getKey(), std::move(p));
-    }
 
     std::string makeStatusText() const {
         std::ostringstream oss;
@@ -95,7 +88,7 @@ private:
 
 public:
     StudentWorld(std::string assetDir)
-      : GameWorld(assetDir), actors{}, ticks(0), newActors{}, antInfo{}, currentWinningAnt{-1} {}
+      : GameWorld(assetDir), actors{}, ticks(0), antInfo{}, currentWinningAnt{-1} {}
     virtual int init() override;
     virtual int move() override;
     virtual void cleanUp() override;
@@ -112,8 +105,9 @@ public:
     }
 
     template<typename Actor, typename... Args>
-    void insertActorAtEndOfTick(Args&&... args) {
-        newActors.emplace_back(std::make_unique<Actor>(*this, std::forward<Args>(args)...));
+    void insertActor(Args&&... args) {
+        auto p = std::make_unique<Actor>(*this, std::forward<Args>(args)...);
+        actors.emplace(p->getKey(), std::move(p));
     }
 
     void increaseAntCountForColony(int t) {

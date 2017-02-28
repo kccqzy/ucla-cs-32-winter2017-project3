@@ -35,20 +35,21 @@ int StudentWorld::init() {
         }
         for (int x = 0; x < VIEW_WIDTH; ++x) {
             for (int y = 0; y < VIEW_HEIGHT; ++y) {
-                auto insertAnthill = [this](int x, int y, int t) {
-                    if (t < (int) antInfo.size()) insertActor<Anthill>(x, y, t, antInfo[t].compiler);
+                auto insertAnthill = [this](Coord c, int t) {
+                    if (t < (int) antInfo.size()) insertActor<Anthill>(c, t, antInfo[t].compiler);
                 };
+                auto c = std::make_tuple(x, y);
                 switch (f.getContentsOf(x, y)) {
                 case Field::FieldItem::empty: break;
-                case Field::FieldItem::water: insertActor<PoolOfWater>(x, y); break;
-                case Field::FieldItem::poison: insertActor<Poison>(x, y); break;
-                case Field::FieldItem::rock: insertActor<Pebble>(x, y); break;
-                case Field::FieldItem::grasshopper: insertActor<BabyGrassHopper>(x, y); break;
-                case Field::FieldItem::food: insertActor<Food>(x, y, 6000); break;
-                case Field::FieldItem::anthill0: insertAnthill(x, y, 0); break;
-                case Field::FieldItem::anthill1: insertAnthill(x, y, 1); break;
-                case Field::FieldItem::anthill2: insertAnthill(x, y, 2); break;
-                case Field::FieldItem::anthill3: insertAnthill(x, y, 3); break;
+                case Field::FieldItem::water: insertActor<PoolOfWater>(c); break;
+                case Field::FieldItem::poison: insertActor<Poison>(c); break;
+                case Field::FieldItem::rock: insertActor<Pebble>(c); break;
+                case Field::FieldItem::grasshopper: insertActor<BabyGrassHopper>(c); break;
+                case Field::FieldItem::food: insertActor<Food>(c, 6000); break;
+                case Field::FieldItem::anthill0: insertAnthill(c, 0); break;
+                case Field::FieldItem::anthill1: insertAnthill(c, 1); break;
+                case Field::FieldItem::anthill2: insertAnthill(c, 2); break;
+                case Field::FieldItem::anthill3: insertAnthill(c, 3); break;
                 }
             }
         }
@@ -87,8 +88,6 @@ int StudentWorld::move() {
                 actors.emplace(newKey, std::move(p));
             }
         }
-        for (auto& i : newActors) { actors.emplace(i->getKey(), std::move(i)); }
-        newActors.clear();
     }
 
     // Final garbage collection pass. An earlier actor may have become dead
@@ -111,7 +110,6 @@ int StudentWorld::move() {
 
 void StudentWorld::cleanUp() {
     actors.clear();
-    newActors.clear();
     antInfo.clear();
     currentWinningAnt = -1;
 }

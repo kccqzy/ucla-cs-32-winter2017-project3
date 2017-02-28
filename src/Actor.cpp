@@ -16,14 +16,14 @@ void Actor::addFoodHere(int howMuch) const {
     auto here = getCoord();
     for (auto const& actor : m_sw.getActorsAt(here, IID_FOOD))
         return static_cast<Food&>(*actor.second).increaseBy(howMuch);
-    m_sw.insertActorAtEndOfTick<Food>(here, howMuch);
+    m_sw.insertActor<Food>(here, howMuch);
 }
 
 void Actor::addPheromoneHere(int type) const {
     auto here = getCoord();
     for (auto const& actor : m_sw.getActorsAt(here, IID_PHEROMONE_TYPE0 + type))
         return static_cast<Food&>(*actor.second).increaseBy(256);
-    m_sw.insertActorAtEndOfTick<Food>(here, type);
+    m_sw.insertActor<Food>(here, type);
 }
 
 void PoolOfWater::doSomething() {
@@ -41,7 +41,7 @@ void Anthill::doSomething() {
         return;
     }
     if (m_currentEnergy >= 2000) {
-        m_sw.insertActorAtEndOfTick<Ant>(getCoord(), m_type, m_comp);
+        m_sw.insertActor<Ant>(getCoord(), m_type, m_comp);
         m_currentEnergy -= 1500;
         m_sw.increaseAntCountForColony(m_type);
     }
@@ -73,7 +73,7 @@ void BabyGrassHopper::doSomething() {
     if (!burnEnergyAndSleep()) return; // Step 1--4
     if (m_currentEnergy >= 1600) {     // Step 5
         addFoodHere(100);
-        m_sw.insertActorAtEndOfTick<AdultGrassHopper>(getCoord());
+        m_sw.insertActor<AdultGrassHopper>(getCoord());
         m_currentEnergy = 0;
     }
     consumeFoodAndMove(); // Steps 6--12
