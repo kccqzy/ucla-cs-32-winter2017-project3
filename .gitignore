@@ -1,4 +1,10 @@
 /Sample/
 /Skeleton/
-/src/Bugs
+Bugs
+Bugs-cli
 *.o
+*.d
+test/Actor.h
+test/Actor.cpp
+test/StudentWorld.h
+test/StudentWorld.cpp
