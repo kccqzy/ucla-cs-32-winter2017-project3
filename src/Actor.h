@@ -139,9 +139,14 @@ private:
 protected:
     Insect(int initialEnergy, StudentWorld& sw, int iid, Coord c)
       : EnergyHolder(initialEnergy, sw, iid, c, randomDirection(), 1), m_sleep(0), m_hasBeenStunnedHere(false) {}
+    bool decrementEnergy(int howMuch) {
+        currentEnergy() -= howMuch;
+        assert(currentEnergy() >= 0);
+        if (!currentEnergy()) addFoodHere(100);
+        return currentEnergy();
+    }
     bool burnEnergyAndSleep() {
-        if (!--currentEnergy()) { // Step 1, 2
-            addFoodHere(100);
+        if (!decrementEnergy(1)) { // Step 1, 2
             return false;
         }
         if (m_sleep) { // Step 3, 4
@@ -163,8 +168,8 @@ protected:
             m_sleep += 2;
         }
     }
-    virtual void bePoisoned() override { currentEnergy() -= std::min(150, currentEnergy()); }
-    virtual void beBitten(int damage) override { currentEnergy() -= std::min(damage, currentEnergy()); }
+    virtual void bePoisoned() override { decrementEnergy(std::min(150, currentEnergy())); }
+    virtual void beBitten(int damage) override { decrementEnergy(std::min(damage, currentEnergy())); }
 };
 
 class Ant final : public Insect {

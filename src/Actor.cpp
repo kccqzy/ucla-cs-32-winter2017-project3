@@ -71,9 +71,8 @@ void Grasshopper::consumeFoodAndMove() {
 void BabyGrasshopper::doSomething() {
     if (!burnEnergyAndSleep()) return; // Step 1--4
     if (currentEnergy() >= 1600) {     // Step 5
-        addFoodHere(100);
         sw().insertActor<AdultGrasshopper>(getCoord());
-        currentEnergy() = 0;
+        decrementEnergy(currentEnergy());
     }
     consumeFoodAndMove(); // Steps 6--12
 }
@@ -172,8 +171,7 @@ bool Ant::evalIf(Compiler::Condition cond) const {
 bool Ant::evalInstr() {
     Compiler::Command cmd;
     if (!m_comp.getCommand(m_ic++, cmd)) {
-        currentEnergy() = 0;
-        addFoodHere(100);
+        decrementEnergy(currentEnergy());
         return false;
     }
     switch (cmd.opcode) {
