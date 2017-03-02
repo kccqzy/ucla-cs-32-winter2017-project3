@@ -4,55 +4,54 @@
 #include <cassert>
 #include <string>
 
-bool Actor::canMoveHere(Coord c) const { return m_sw.getActorsAt(c, IID_ROCK).empty(); }
+bool Actor::canMoveHere(Coord c) const { return sw().getActorsAt(c, IID_ROCK).empty(); }
 
 int Actor::attemptConsumeAtMostFood(int maxEnergy) const {
-    for (auto const& actor : m_sw.getActorsAt(getCoord(), IID_FOOD))
+    for (auto const& actor : sw().getActorsAt(getCoord(), IID_FOOD))
         return static_cast<Food&>(*actor.second).consumeAtMost(maxEnergy);
     return 0;
 }
 
 void Actor::addFoodHere(int howMuch) const {
     auto here = getCoord();
-    for (auto const& actor : m_sw.getActorsAt(here, IID_FOOD))
+    for (auto const& actor : sw().getActorsAt(here, IID_FOOD))
         return static_cast<Food&>(*actor.second).increaseBy(howMuch);
-    m_sw.insertActor<Food>(here, howMuch);
+    sw().insertActor<Food>(here, howMuch);
 }
 
 void Actor::addPheromoneHere(int type) const {
     auto here = getCoord();
-    for (auto const& actor : m_sw.getActorsAt(here, IID_PHEROMONE_TYPE0 + type))
+    for (auto const& actor : sw().getActorsAt(here, IID_PHEROMONE_TYPE0 + type))
         return static_cast<Pheromone&>(*actor.second).increaseBy(256);
-    m_sw.insertActor<Pheromone>(here, type);
+    sw().insertActor<Pheromone>(here, type);
 }
 
 void PoolOfWater::doSomething() {
-    for (auto const& actor : m_sw.getActorsAt(getCoord())) actor.second->beStunned();
+    for (auto const& actor : sw().getActorsAt(getCoord())) actor.second->beStunned();
 }
 
 void Poison::doSomething() {
-    for (auto const& actor : m_sw.getActorsAt(getCoord())) actor.second->bePoisoned();
+    for (auto const& actor : sw().getActorsAt(getCoord())) actor.second->bePoisoned();
 }
 
 void Anthill::doSomething() {
-    if (!--m_currentEnergy) return;
+    if (!--currentEnergy()) return;
     if (int consumedFood = attemptConsumeAtMostFood(10000)) {
-        m_currentEnergy += consumedFood;
+        currentEnergy() += consumedFood;
         return;
     }
-    if (m_currentEnergy >= 2000) {
-        m_sw.insertActor<Ant>(getCoord(), m_type, m_comp);
-        m_currentEnergy -= 1500;
-        m_sw.increaseAntCountForColony(m_type);
+    if (currentEnergy() >= 2000) {
+        sw().insertActor<Ant>(getCoord(), m_type, m_comp);
+        currentEnergy() -= 1500;
+        sw().increaseAntCountForColony(m_type);
     }
 }
 
 void Grasshopper::consumeFoodAndMove() {
     if (int consumedFood = attemptConsumeAtMostFood(200)) { // Step 6 (baby) or 7 (adult)
-        m_currentEnergy += consumedFood;
+        currentEnergy() += consumedFood;
         if (randInt(0, 1)) { // Step 7 (baby) or 8 (adult)
-            m_sleep = 2;
-            return;
+            return resetSleep();
         }
     }
     if (!m_distance) { // Step 8 (baby) or 8 (adult)
@@ -66,15 +65,15 @@ void Grasshopper::consumeFoodAndMove() {
     } else {          // Step 10 (baby) or 11 (adult)
         m_distance = 0;
     }
-    m_sleep = 2; // Step 12 (baby) or 13 (adult)
+    resetSleep(); // Step 12 (baby) or 13 (adult)
 }
 
 void BabyGrasshopper::doSomething() {
     if (!burnEnergyAndSleep()) return; // Step 1--4
-    if (m_currentEnergy >= 1600) {     // Step 5
+    if (currentEnergy() >= 1600) {     // Step 5
         addFoodHere(100);
-        m_sw.insertActor<AdultGrasshopper>(getCoord());
-        m_currentEnergy = 0;
+        sw().insertActor<AdultGrasshopper>(getCoord());
+        currentEnergy() = 0;
     }
     consumeFoodAndMove(); // Steps 6--12
 }
@@ -85,16 +84,14 @@ void AdultGrasshopper::doSomething() {
         auto insectsHere = findOtherInsectsHere();
         if (!insectsHere.empty()) {
             static_cast<Actor*>(insectsHere[randInt(0, insectsHere.size() - 1)])->beBitten(50);
-            m_sleep = 2;
-            return;
+            return resetSleep();
         }
     }
     if (!randInt(0, 9)) { // Step 6
         auto openSquares = findOpenSquaresCenteredHere();
         if (!openSquares.empty()) {
             moveTo(openSquares[randInt(0, openSquares.size() - 1)]);
-            m_sleep = 2;
-            return;
+            return resetSleep();
         }
     }
     consumeFoodAndMove(); // Steps 7--13
@@ -115,7 +112,7 @@ std::vector<Coord> AdultGrasshopper::findOpenSquaresCenteredHere() const {
 }
 
 std::vector<Insect*> Insect::findOtherInsectsHere() const {
-    auto actorsHere = m_sw.getActorsAt(getCoord());
+    auto actorsHere = sw().getActorsAt(getCoord());
     std::vector<Insect*> insectsHere; // TODO use better search
     for (auto const& actor : actorsHere) {
         int iid = actor.second->iid();
@@ -137,31 +134,31 @@ bool Ant::evalIf(Compiler::Condition cond) const {
     switch (cond) {
     case Compiler::Condition::last_random_number_was_zero: return m_rand == 0;
     case Compiler::Condition::i_am_carrying_food: return m_foodHeld > 0;
-    case Compiler::Condition::i_am_hungry: return m_currentEnergy <= 25;
+    case Compiler::Condition::i_am_hungry: return currentEnergy() <= 25;
     case Compiler::Condition::i_am_standing_with_an_enemy:
-        for (auto const& actor : m_sw.getActorsAt(getCoord())) {
+        for (auto const& actor : sw().getActorsAt(getCoord())) {
             int iid = actor.second->iid();
             if (iid == IID_ADULT_GRASSHOPPER || iid == IID_BABY_GRASSHOPPER ||
-                (iid >= IID_ANT_TYPE0 && iid <= IID_ANT_TYPE3 && m_iid != iid))
+                (iid >= IID_ANT_TYPE0 && iid <= IID_ANT_TYPE3 && this->iid() != iid))
                 return true;
         }
         return false;
     case Compiler::Condition::i_am_standing_on_my_anthill:
-        for (auto const& actor : m_sw.getActorsAt(getCoord(), IID_ANT_HILL))
+        for (auto const& actor : sw().getActorsAt(getCoord(), IID_ANT_HILL))
             if (static_cast<Anthill&>(*actor.second).getType() == this->getType()) return true;
         return false;
-    case Compiler::Condition::i_am_standing_on_food: return !m_sw.getActorsAt(getCoord(), IID_FOOD).empty();
+    case Compiler::Condition::i_am_standing_on_food: return !sw().getActorsAt(getCoord(), IID_FOOD).empty();
     case Compiler::Condition::i_smell_pheromone_in_front_of_me:
-        for (auto const& actor : m_sw.getActorsAt(nextLocation())) {
+        for (auto const& actor : sw().getActorsAt(nextLocation())) {
             int iid = actor.second->iid();
             if (iid >= IID_PHEROMONE_TYPE0 && iid <= IID_PHEROMONE_TYPE3) return true;
         }
         return false;
     case Compiler::Condition::i_smell_danger_in_front_of_me:
-        for (auto const& actor : m_sw.getActorsAt(nextLocation())) {
+        for (auto const& actor : sw().getActorsAt(nextLocation())) {
             int iid = actor.second->iid();
             if (iid == IID_POISON || iid == IID_ADULT_GRASSHOPPER || iid == IID_BABY_GRASSHOPPER ||
-                (iid >= IID_ANT_TYPE0 && iid <= IID_ANT_TYPE3 && m_iid != iid))
+                (iid >= IID_ANT_TYPE0 && iid <= IID_ANT_TYPE3 && this->iid() != iid))
                 return true;
         }
         return false;
@@ -175,7 +172,7 @@ bool Ant::evalIf(Compiler::Condition cond) const {
 bool Ant::evalInstr() {
     Compiler::Command cmd;
     if (!m_comp.getCommand(m_ic++, cmd)) {
-        m_currentEnergy = 0;
+        currentEnergy() = 0;
         addFoodHere(100);
         return false;
     }
@@ -193,7 +190,7 @@ bool Ant::evalInstr() {
     case Compiler::Opcode::eatFood: {
         int toEat = std::min(100, m_foodHeld);
         m_foodHeld -= toEat;
-        m_currentEnergy += toEat;
+        currentEnergy() += toEat;
         return false;
     }
     case Compiler::Opcode::dropFood:
@@ -205,7 +202,7 @@ bool Ant::evalInstr() {
     case Compiler::Opcode::bite: {
         auto insectsHere = findOtherInsectsHere();
         insectsHere.erase(
-          std::remove_if(insectsHere.begin(), insectsHere.end(), [this](Insect* i) { return i->iid() == m_iid; }),
+          std::remove_if(insectsHere.begin(), insectsHere.end(), [this](Insect* i) { return i->iid() == iid(); }),
           insectsHere.end());
         if (!insectsHere.empty()) static_cast<Actor*>(insectsHere[randInt(0, insectsHere.size() - 1)])->beBitten(15);
         return false;

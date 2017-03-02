@@ -12,9 +12,11 @@ typedef std::tuple<int, int> Coord;
 class StudentWorld;
 
 class Actor : public GraphObject {
-protected:
+private:
     StudentWorld& m_sw;
     int m_iid;
+
+protected:
     Actor(StudentWorld& sw, int iid, Coord c, Direction dir, unsigned depth)
       : GraphObject(iid, std::get<0>(c), std::get<1>(c), dir, depth), m_sw(sw), m_iid(iid) {}
     bool canMoveHere(Coord c) const;
@@ -33,6 +35,7 @@ protected:
     void addPheromoneHere(int type) const;
     static auto randomDirection() { return static_cast<Direction>(randInt(up, left)); }
     Coord getCoord() const { return std::make_tuple(getX(), getY()); }
+    StudentWorld& sw() const { return m_sw; }
 
 public:
     virtual void doSomething() = 0;
@@ -69,8 +72,12 @@ private:
 };
 
 class EnergyHolder : public Actor {
-protected:
+private:
     int m_currentEnergy;
+
+protected:
+    int const& currentEnergy() const { return m_currentEnergy; }
+    int& currentEnergy() { return m_currentEnergy; }
     template<typename... Args>
     EnergyHolder(int initialEnergy, Args&&... args)
       : Actor(std::forward<Args>(args)...), m_currentEnergy{initialEnergy} {}
@@ -86,10 +93,10 @@ private:
 
 public:
     Food(StudentWorld& sw, Coord c, int energy) : EnergyHolder(energy, sw, IID_FOOD, c, right, 2) {}
-    void increaseBy(int howMuch) { m_currentEnergy += howMuch; }
+    void increaseBy(int howMuch) { currentEnergy() += howMuch; }
     int consumeAtMost(int howMuch) {
-        int actualConsumed = std::min(howMuch, m_currentEnergy);
-        m_currentEnergy -= actualConsumed;
+        int actualConsumed = std::min(howMuch, currentEnergy());
+        currentEnergy() -= actualConsumed;
         return actualConsumed;
     }
 };
@@ -97,7 +104,7 @@ public:
 class Pheromone final : public EnergyHolder {
 public:
     Pheromone(StudentWorld& sw, Coord c, int type) : EnergyHolder(256, sw, typeToIID(type), c, right, 2) {}
-    void increaseBy(int howMuch) { m_currentEnergy = std::max(768, m_currentEnergy + howMuch); }
+    void increaseBy(int howMuch) { currentEnergy() = std::max(768, currentEnergy() + howMuch); }
 
 private:
     static int typeToIID(int type) {
@@ -107,7 +114,7 @@ private:
         static_assert(IID_PHEROMONE_TYPE0 + 3 == IID_PHEROMONE_TYPE3, "Unexpected IID_PHEROMONE_TYPE3 index");
         return IID_PHEROMONE_TYPE0 + type;
     }
-    virtual void doSomething() override { --m_currentEnergy; }
+    virtual void doSomething() override { --currentEnergy(); }
 };
 
 class Anthill final : public EnergyHolder {
@@ -125,13 +132,15 @@ private:
 };
 
 class Insect : public EnergyHolder {
+private:
+    int m_sleep;
+    bool m_hasBeenStunnedHere;
+
 protected:
     Insect(int initialEnergy, StudentWorld& sw, int iid, Coord c)
       : EnergyHolder(initialEnergy, sw, iid, c, randomDirection(), 1), m_sleep(0), m_hasBeenStunnedHere(false) {}
-    int m_sleep;
-    bool m_hasBeenStunnedHere;
     bool burnEnergyAndSleep() {
-        if (!--m_currentEnergy) { // Step 1, 2
+        if (!--currentEnergy()) { // Step 1, 2
             addFoodHere(100);
             return false;
         }
@@ -141,6 +150,7 @@ protected:
         }
         return true;
     }
+    void resetSleep() { m_sleep = 2; }
     void moveTo(Coord c) { // Overload not override. No virtual needed.
         assert(c != getCoord());
         Actor::moveTo(c);
@@ -153,8 +163,8 @@ protected:
             m_sleep += 2;
         }
     }
-    virtual void bePoisoned() override { m_currentEnergy -= std::min(150, m_currentEnergy); }
-    virtual void beBitten(int damage) override { m_currentEnergy -= std::min(damage, m_currentEnergy); }
+    virtual void bePoisoned() override { currentEnergy() -= std::min(150, currentEnergy()); }
+    virtual void beBitten(int damage) override { currentEnergy() -= std::min(damage, currentEnergy()); }
 };
 
 class Ant final : public Insect {
@@ -183,14 +193,16 @@ private:
         Insect::moveTo(c);
         m_isBitten = false;
     }
-    int getType() const { return m_iid - IID_ANT_TYPE0; }
+    int getType() const { return iid() - IID_ANT_TYPE0; }
 };
 
 class Grasshopper : public Insect {
+private:
+    int m_distance;
+
 protected:
     template<typename... Args>
     Grasshopper(Args&&... args) : Insect(std::forward<Args>(args)...), m_distance(randInt(2, 10)) {}
-    int m_distance;
     void consumeFoodAndMove();
 };
 
