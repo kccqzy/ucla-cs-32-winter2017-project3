@@ -176,6 +176,7 @@ bool Ant::evalInstr() {
     Compiler::Command cmd;
     if (!m_comp.getCommand(m_ic++, cmd)) {
         m_currentEnergy = 0;
+        addFoodHere(100);
         return false;
     }
     switch (cmd.opcode) {
