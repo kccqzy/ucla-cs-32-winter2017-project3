@@ -69,7 +69,6 @@ private:
         int antCount;
         AntColonyInfo(std::string const& name, Compiler&& compiler)
           : name(name), compiler(std::move(compiler)), antCount(0) {}
-        friend bool operator<(AntColonyInfo const& a, AntColonyInfo const& b) { return a.antCount < b.antCount; }
     };
     std::vector<AntColonyInfo> antInfo;
     int currentWinningAnt;
@@ -87,8 +86,7 @@ private:
     }
 
 public:
-    StudentWorld(std::string assetDir)
-      : GameWorld(assetDir), actors{}, ticks(0), antInfo{}, currentWinningAnt{-1} {}
+    StudentWorld(std::string assetDir) : GameWorld(assetDir), actors{}, ticks(0), antInfo{}, currentWinningAnt{-1} {}
     virtual int init() override;
     virtual int move() override;
     virtual void cleanUp() override;
