@@ -276,9 +276,8 @@ events.
 For issues of consistency and determinism (barring the random number
 generator), we want the following three intuitive properties to hold:
 
--   Every actor that is present at the beginning of tick and alive when it is
-    their turn is given one and only one chance to `doSomething()` in this
-    tick.
+-   An actor will be given a chance to `doSomething()` if and only if it is
+    present at the beginning of the tick and alive when it is their turn.
 
 -   There is a *total order* of events, that is for any two events, exactly
     one of them happens-before the other one, including all externally
@@ -327,6 +326,49 @@ earlier actor. This is necessary to achieve, for example, the following
 intuitive behavior: *for every adult grasshopper that was bitten, there exists
 at least one other insect to retaliate at the same coordinate as the bitten
 adult grasshopper*.
+
+The only exception to the rule above is that if an `Actor` has caused an
+`Actor` who has already performed its action in this tick to die, the dead
+earlier `Actor` will not be destructed until right before the end of the tick.
+
+## Data Structure For `Actor`s In `StudentWorld`
+
+The specification intentionally leaves the data structure used to hold
+pointers to `Actor`s in `StudentWorld` unspecified. It suggests a 2D array of
+linked lists containing pointers to `Actor`.
+
+In this design, `StudentWorld` instead uses a multimap from the 3-tuple
+containing $x$, $y$, and image ID to `Actor*`. The primary benefit is that it
+can not only (asymptotically) efficiently look up all actors at a particular
+location, it can also efficiently lookup a particular actor at a particular
+location. This is beneficial because in many scenarios, we are only interested
+in a particular kind of actor at a location; for example, when an insect dies,
+we are interested in finding out whether there is already a pile of food at
+the location, and when an insect attempts to move, we are interested in
+finding out whether there is a pebble at the new location. Making the image ID
+part of the key to the multimap would support such lookups efficiently.
+
+Of course, we need to retain the ability to look up all actors at a particular
+location. To this end, I have defined my own ordering for tuples. The struct
+template `TupleComp` achieves this. It induces an ordering on (potentially
+heterogeneous) tuples of possibly unequal sizes. The standard ordering on
+tuples require them to be of the same size, which is too restrictive. Instead,
+we model each element in an tuple as a sort key that determines whether or not
+any possible actor belongs in this partition. Then tuples of different sizes
+become coarser or finer partitions of the set of actors. It has the following
+properties: (a) uniqueness: for all actor, there exists one and only one sort
+key, and therefore this sort key partitions the set of all actors into
+disjoint subsets; (b) composability: for all concatenation of tuples $(p,q)$,
+the partition induced by $(p,q)$ is the same as partitioning by $q$ on each
+subset produced by partitioning on $p$. Thus we can define a strict weak
+ordering $<^*$ on these tuples of unequal sizes by taking the longest common
+prefix and then using the standard strict weak ordering $<$. It is easy to
+prove that this new ordering is in fact irreflexive and transitive, and a
+detailed proof is omitted here.
+
+## Probability Distribution For Adult Grasshoppers' Jumps
+
+## More Than Four Bug Programs Provided
 
 # Testing
 
