@@ -1,6 +1,5 @@
 #include "GameWorld.h"
-#include <fstream>
-#include <iostream>
+#include <cstdio>
 #include <string>
 using namespace std;
 
@@ -37,6 +36,7 @@ void run(int argc, char* argv[], GameWorld* gw, std::string windowTitle) {
 }
 
 int main(int argc, char* argv[]) {
+    setvbuf(stdout, NULL, _IOFBF, 0xffffull);
     GameWorld* gw = createStudentWorld(assetDirectory);
     run(argc, argv, gw, "Bugs");
     delete gw;

@@ -1,6 +1,6 @@
 CXX=/usr/local/opt/llvm/bin/clang++
-CXXFLAGS=-Wall -Wextra -Wno-deprecated-declarations -O0 -fno-rtti -fno-exceptions -march=native -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -g -std=c++14 -stdlib=libc++ -Isrc -MMD
-#CXXFLAGS=-Wall -Wextra -Wno-deprecated-declarations -O3 -fno-rtti -fno-exceptions -march=native -std=c++14 -stdlib=libc++ -MMD
+#CXXFLAGS=-Wall -Wextra -Wno-deprecated-declarations -O0 -fno-rtti -fno-exceptions -march=native -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -g -std=c++14 -stdlib=libc++ -Isrc -MMD
+CXXFLAGS=-Wall -Wextra -Wno-deprecated-declarations -O3 -fno-rtti -fno-exceptions -march=native -std=c++14 -stdlib=libc++ -Isrc -MMD
 
 .PHONY: clean regen all
 
@@ -62,7 +62,7 @@ src/main.o: src/main.cpp src/GameController.h src/SpriteManager.h \
   src/freeglut.h src/freeglut_std.h src/freeglut_ext.h \
   src/GameConstants.h
 test/Actor.o: test/Actor.cpp test/Actor.h src/Compiler.h \
-  src/GameConstants.h test/GraphObject.h src/StudentWorld.h src/Field.h \
+  src/GameConstants.h test/GraphObject.h test/StudentWorld.h src/Field.h \
   src/GameWorld.h
 test/GameWorld.o: test/GameWorld.cpp src/GameWorld.h src/GameConstants.h
 test/StudentWorld.o: test/StudentWorld.cpp test/StudentWorld.h \
