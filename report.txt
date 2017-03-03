@@ -101,7 +101,9 @@ functions:
     This function allows anyone to determine the image ID of the current
     actor. Despite its name, besides specifying a kind of image to display on
     the screen, the image ID provides an efficient way to distinguish between
-    different derived classes of an `Actor`.
+    different derived classes of an `Actor`. Essentially this is a hand-rolled
+    form of `dynamic_cast`. See below the section on Design Decisions for
+    details.
 
     It is not virtual because it does not need to be overridden.
 
@@ -426,7 +428,22 @@ special handling of the first ant colony in the sample executable's
 `StudentWorld::increaseScore(int)`{.cpp} member function. I have decided to
 ignore the sample executable and follow the spec closely.
 
-## Adult Grasshoppers' Jumps
+## Ants: Fetching Invalid Instructions
+
+The spec is unclear whether an ant that dies because of an error in fetching
+instructions would turn into 100 units of food. It is not mentioned in part
+4b. However I believe it is the intention that all dying insects will become a
+pile of food, and this is what I have implemented.
+
+## Ants: Detection of Pheromone
+
+It is unclear whether an ant can detect pheromone emitted by ants of other
+colonies. It seems logical that an ant should be able to detect only pheromone
+emitted by members of its own, but the spec instead only specifies that the
+pheromone shall be of "a strength of at least 1." It is then decided that all
+ants can detect the pheromone emitted by all ants.
+
+## Adult Grasshopper: Jumping
 
 The spec is unclear about how a random open square within a radius of 10 is
 selected when an adult grasshopper jumps. Indeed, the logical thing to do
@@ -482,4 +499,67 @@ will pick one with equal probability.
 
 # Testing
 
-None.
+Care has been taken to reduce certain errors that would otherwise be
+impossible in a high-level language. This includes compiling with the
+strictest set of warnings `-Wall -Wextra`, treating warnings as errors,
+compiling with address sanitizer and undefined behavior sanitizer. Modern
+practices such as smart pointers are used for simpler and more correct memory
+management. Together with good common sense, these practices ensure that even
+during development, memory errors are rare.
+
+Due to the slowness of graphics operations, I have developed a GUI-less
+version of the Bugs simulation framework that the `Actor.h`, `Actor.cpp`,
+`StudentWorld.h`, `StudentWorld.cpp` files can use directly without change. It
+involves replacing the provided `GraphObject.h`, `GameWorld.cpp`, and
+`main.cpp`. This allows text processing tools to read and understand the
+onscreen graphics state.
+
+Furthermore, a special version of each actor class is produced that logs every
+externally visible effect in text form. The version is not the one submitted
+here, because for logging purposes, all members are made public through
+macros. The logs produced by these are also collected and analyzed separately.
+
+## Testing the `Pebble` Class
+
+The `Pebble` class's primary behavior is to do nothing. To this end, the
+testing makes sure that it never invokes the `moveTo` or `setDirection` member
+functions. The testing tool runs the CLI version of the simulation and uses
+`grep` to make sure there are no logs about pebbles calling `moveTo` or
+`setDirection`. Also, all logs produced by its constructor happen at the
+beginning and all logs produced by its destructor happen at the end.
+
+## Testing the `Poison` Class
+
+The `Pebble` class's primary behavior is to poison. Similarly, the test also
+ensures that it never invokes the `moveTo` or `setDirection` member functions
+by observing its logging output. Also, all logs produced by its constructor
+happen at the beginning and all logs produced by its destructor happen at the
+end. Furthermore its `doSomething` member function logs each attempt to poison
+insects and print its energy value.
+
+## Testing the `PoolOfWater` Class
+
+This is very similar to testing the `Poison` class, except that the logging
+for its `doSomething` member function logs each insect's sleeping state.
+Together with the location of insects, it is then possible to verify that they
+are stunned only once until the insect leaves.
+
+## Testing the `Pheromone` Class
+
+The `Pheromone` class like the classes above are also immobile once
+constructed. However, by default, it lasts exactly 256 ticks between its
+creation and destruction. This is tested by recording the tick during which it
+is created, topped up, and destructed.
+
+## Testing the `Food` Class
+
+The `Food` class is similar to `Pheromone` in that it is immobile once
+created. However, the amounts are much more variable, and more care is needed
+to write tests that observe its behavior.
+
+## Testing the `Anthill` Class
+
+The `Anthill` class is also quite simple. It is also immobile so no `moveTo`
+or `setDirection` calls are expected. Its `doSomething` prints its current
+energy value, so this is corroborated with other events such as the global
+tick count and `Ant` creations.
