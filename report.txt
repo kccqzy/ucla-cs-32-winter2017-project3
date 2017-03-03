@@ -1,4 +1,4 @@
-% CS32 Project 3 Report (Draft)
+% CS32 Project 3 Report
 
 # Classes and Their Public Member Functions
 
@@ -563,3 +563,43 @@ The `Anthill` class is also quite simple. It is also immobile so no `moveTo`
 or `setDirection` calls are expected. Its `doSomething` prints its current
 energy value, so this is corroborated with other events such as the global
 tick count and `Ant` creations.
+
+## Testing the Insects
+
+The insects are difficult to test because they exhibit random behavior
+controlled by the RNG. The `randInt` function has been replaced by the
+following version which seeds the RNG with a zero seed:
+
+```cpp
+int randInt(int min, int max) {
+    if (max < min)
+        std::swap(max, min);
+    static std::mt19937 generator(0);
+    std::uniform_int_distribution<> distro(min, max);
+    return distro(generator);
+}
+```
+
+Even even, it is still sensitive to the order of operations and other minor
+behavioral changes that still conform to the spec. At least,
+this makes code changes the only source of changes to the output produced by
+those insects, so that when a new version produces different logging output,
+it is immediately caught.
+
+It is sadly the fact that the implementation of these insects is a perfect
+translation of their description. Therefore, correctness is "achieved" through
+manual inspection of logging output by "fallible" human.
+
+## Testing `StudentWorld`
+
+The `StudentWorld` class essentially manages other `Actor` classes and
+provides services to other `Actor`. Bugs in `StudentWorld` will likely be
+caught in `Actor` classes given enough runs. For example, a delay in updating
+the data structure for `Actor` lookups would result in assertion failures in
+`AdultGrasshopper` when it tries to retaliate after biting. When other classes
+work fine, it is very likely that `StudentWorld` is correct as well.
+
+I have found that a sound design, especially for `StudentWorld::move()` is far
+more important than testing. I have elaborated these design decisions above so
+I will not repeat them here. Once the design is analyzed, and the various
+`Actor`s working fine, there is little room for other issues.
