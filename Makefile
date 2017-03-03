@@ -25,7 +25,7 @@ report.docx: report.txt
 	pandoc --toc --smart --standalone --from markdown+inline_code_attributes -o $@ $<
 
 report.html: report.txt
-	pandoc --toc --smart --standalone --from markdown+inline_code_attributes -o $@ $<
+	pandoc --toc --smart --standalone --self-contained --from markdown+inline_code_attributes -o $@ $<
 
 report.pdf: report.txt
 	pandoc --toc --smart --standalone --variable=geometry:letterpaper,margin=1in --from markdown+inline_code_attributes -o $@ $<

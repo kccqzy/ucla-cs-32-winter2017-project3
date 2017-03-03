@@ -366,9 +366,119 @@ prefix and then using the standard strict weak ordering $<$. It is easy to
 prove that this new ordering is in fact irreflexive and transitive, and a
 detailed proof is omitted here.
 
-## Probability Distribution For Adult Grasshoppers' Jumps
+## Pragmatism Over Object-Oriented Purity
+
+Object-oriented purists would scoff at the use of `dynamic_cast` or other
+equivalent methods to detect an object's actual type. They argue, instead,
+that the object's concrete type is unimportant, and instead we should "add a
+method to check for a kind of behavior"[^nach17]. I argue that this is not
+only unnatural, but also a form of premature abstraction that leads to overly
+complicated and opaque designs.
+
+[^nach17]: Nachenberg, C.S. (2016). *Object Oriented Programming Tips*. Online
+resource. Retrieved February 27, 2017 from
+<http://web.cs.ucla.edu/classes/winter17/cs32/Projects/3/oodtips.pdf>
+
+First, when we have a hierarchy of classes related by inheritance (is-a
+relationship), it is natural to ask where a particular object belongs in this
+hierarchy. To put in more mathematical terms, by designing a hierarchy of
+classes, we have effectively designed *partitions* of the set of objects. By
+making a class called `Insect` derive from `Actor`, we are essentially
+establishing a subset relationship between these two sets. Barring multiple
+inheritance, all subsets defined in this manner are either disjoint or subsets
+of themselves; that is, their intersection is either the empty set or one of
+the set itself.
+
+In light of this, it is very easy and natural to feel the need for another
+fundamental set operation, namely, element-of. Indeed, the spec itself does
+not describe actions being conditional on a certain kind of behavior, instead
+it merely describes the actual type of the object. It uses language like "if
+the ant is currently on the same square as a food object [...]", instead of
+"if the ant is currently on the same square as an object that is alive and
+edible." Even when it does describe a kind of behavior, it invariably
+clarifies what concrete types this behavior is exhibited on.
+
+Second, it is unclear that such an abstraction provides any benefit at all.
+One might argue that as programs get more complicated and classes become more
+numerous, it would be less cumbersome to describe a behavior rather than
+enumerating all classes that exhibits this behavior. However, as noted above,
+such predicates on objects often do not follow precisely the hierarchy of
+classes, and a traditional object-oriented solution would lead to excessive
+overridden methods scattered in many classes that are also hard to maintain.
+On the other hand, enumerating the classes (either through `dynamic_cast`, or
+a hand-rolled equivalent such as through their mapping to image IDs) is a
+direct translation of the spec that provides clarity in the source code.
 
 ## More Than Four Bug Programs Provided
+
+It is not clear from the spec what should be done when more than four bug
+programs are provided. The sample executable crashes in its
+`StudentWorld::increaseScore(int)`{.cpp} member function, presumably due to an
+out-of-bounds array access when comparing the number of ants produced.
+
+## Winning Ant Colony Calculation
+
+Although the spec itself is reasonably clear on how the winning ant colony is
+determined, the sample executable itself does not follow the spec. The sample
+has a bug that causes it to misidentify the winning ant colony if the first
+(index 0) ant colony overtakes another ant colony. This is likely due to the
+special handling of the first ant colony in the sample executable's
+`StudentWorld::increaseScore(int)`{.cpp} member function. I have decided to
+ignore the sample executable and follow the spec closely.
+
+## Adult Grasshoppers' Jumps
+
+The spec is unclear about how a random open square within a radius of 10 is
+selected when an adult grasshopper jumps. Indeed, the logical thing to do
+would be that any square within this radius of 10 would have equal probability
+of being jumped to. However, the sample executable, in
+`AdultGrasshopper::jump()`{.cpp}, does this instead:
+
+```gnuassembler
+movl   $0x3, %edi           ; sets edi (first function argument) to 3
+movl   $0xa, %esi           ; sets esi (second function argument) to 10
+movl   %eax, -0x28(%rbp)    ; saves current y coordinate to rbp-0x28
+callq  0x10000f4d0          ; calls randInt(3, 10)
+xorl   %edi, %edi           ; sets edi (first function argument) to zero
+movl   $0x167, %esi         ; sets esi (second function argument) to 359
+movsd  0x189b9(%rip), %xmm0 ; sets xmm0 to 2.0
+cvtsi2sdl %eax, %xmm1       ; casts radius to double and store in xmm1
+movsd  %xmm1, -0x30(%rbp)   ; saves radius in double to rbp-0x30
+mulsd  0x1fcf0(%rip), %xmm0 ; multiply xmm0 by pi to get 2pi
+movsd  %xmm0, -0x50(%rbp)   ; saves 2pi to local variable at rbp-0x50
+callq  0x10000f4d0          ; calls randInt(0, 359)
+movsd  0x1898e(%rip), %xmm0 ; sets xmm0 to 360.0
+cvtsi2sdl %eax, %xmm1       ; converts angle to double and store in xmm1
+movsd  -0x50(%rbp), %xmm2   ; loads 2pi in xmm2
+mulsd  %xmm1, %xmm2         ; multiply xmm1 with xmm2: the angle times 2pi
+divsd  %xmm0, %xmm2         ; divide the result by 360.0
+movsd  %xmm2, -0x38(%rbp)   ; saves the angle in radian in rbp-0x38
+movsd  -0x30(%rbp), %xmm0   ; loads the radius to xmm0
+movsd  -0x38(%rbp), %xmm1   ; loads the angle in radian to xmm1
+movsd  %xmm0, -0x58(%rbp)   ; saves radius to rbp-0x58
+movaps %xmm1, %xmm0         ; saves angle to xmm0
+callq  0x10003a82c          ; calls cos() to find cosine of random angle
+movsd  -0x58(%rbp), %xmm1   ; loads radius to xmm1
+mulsd  %xmm0, %xmm1         ; multiply radius with cosine of angle
+cvttsd2si %xmm1, %eax       ; truncates this to integer and saves in eax
+movl   %eax, -0x3c(%rbp)    ; saves the delta x coordinate to rbp-0x3c
+```
+
+In other words, it calls randInt(3, 10) to get the radius and randInt(0, 359)
+to get the angle and then computes the coordinate. This quite obviously
+results in a non-uniform distribution as squares located closer to the center
+(but outside $r=3$) will have a higher probability.
+
+![Probability distribution of coordinate deltas.](./Probs.png)
+
+Furthermore, the sample executable also does not do a good job of detecting
+open squares. Instead of enumerating all squares and finding whether or not
+all of them have pebbles, it simply tries 10 times to jump, and if none
+succeeds, presumes all square within a radius of 10 are occupied by pebbles.
+
+In my design, I followed common sense and instead looks at all open squares
+within a radius of 10, and as long as there is at least one open square, it
+will pick one with equal probability.
 
 # Testing
 
