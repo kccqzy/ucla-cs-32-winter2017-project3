@@ -41,7 +41,7 @@ public:
     virtual void doSomething() = 0;
     int iid() const { return m_iid; }
     std::tuple<int, int, int> getKey() const { return std::make_tuple(getX(), getY(), iid()); }
-    virtual bool isDead() const { return false; } // TODO are non energyholders always not dead?
+    virtual bool isDead() const { return false; }
     virtual void beStunned() {}
     virtual void bePoisoned() {}
     virtual void beBitten(int) {}
