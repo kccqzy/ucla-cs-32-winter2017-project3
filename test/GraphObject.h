@@ -2,23 +2,23 @@
 #define GRAPHOBJ_H_
 
 #include "GameConstants.h"
-#include <cstdio>
 #include <cassert>
+#include <cstdio>
 
 class GraphObject {
 public:
     enum Direction { none, up, right, down, left };
     GraphObject(int imageID, int startX, int startY, Direction dir = right, int depth = 0, double size = 0.25)
       : m_imageID(imageID), m_x(startX), m_y(startY), m_direction(dir) {
-        printf("GraphObject created with (imageID=%s, startX=%d, startY=%d, dir=%s, depth=%d, size=%.2f)\n",
+        printf("GraphObject %p created with (imageID=%s, startX=%d, startY=%d, dir=%s, depth=%d, size=%.2f)\n", this,
                describeIID(imageID), startX, startY, describeDirection(dir), depth, size);
     }
-    virtual ~GraphObject() = default;
+    virtual ~GraphObject() noexcept { printf("GraphObject %p destructed\n", this); }
     int getX() const { return m_x; }
     int getY() const { return m_y; }
     void moveTo(int x, int y) {
-        printf("GraphObject (imageID=%s, x=%d, y=%d, dir=%s) moving to (x=%d, y=%d)\n", describeIID(m_imageID), m_x,
-               m_y, describeDirection(m_direction), x, y);
+        printf("GraphObject %p (imageID=%s, x=%d, y=%d, dir=%s) moving to (x=%d, y=%d)\n", this, describeIID(m_imageID),
+               m_x, m_y, describeDirection(m_direction), x, y);
         assert(0 <= x);
         assert(0 <= y);
         assert(x < VIEW_WIDTH);
@@ -28,8 +28,8 @@ public:
     }
     Direction getDirection() const { return m_direction; }
     void setDirection(Direction d) {
-        printf("GraphObject (imageID=%s, x=%d, y=%d, dir=%s) changing direction to %s\n", describeIID(m_imageID), m_x,
-               m_y, describeDirection(m_direction), describeDirection(d));
+        printf("GraphObject %p (imageID=%s, x=%d, y=%d, dir=%s) changing direction to %s\n", this,
+               describeIID(m_imageID), m_x, m_y, describeDirection(m_direction), describeDirection(d));
         assert(d != none);
         m_direction = d;
     }
