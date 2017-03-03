@@ -13,7 +13,10 @@ public:
         printf("GraphObject %p created with (imageID=%s, startX=%d, startY=%d, dir=%s, depth=%d, size=%.2f)\n", this,
                describeIID(imageID), startX, startY, describeDirection(dir), depth, size);
     }
-    virtual ~GraphObject() noexcept { printf("GraphObject %p destructed\n", this); }
+    virtual ~GraphObject() noexcept {
+        printf("GraphObject %p (imageID=%s, x=%d, y=%d, dir=%s) destructed\n", this, describeIID(m_imageID), m_x, m_y,
+               describeDirection(m_direction));
+    }
     int getX() const { return m_x; }
     int getY() const { return m_y; }
     void moveTo(int x, int y) {
