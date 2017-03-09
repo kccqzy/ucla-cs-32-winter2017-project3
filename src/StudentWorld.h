@@ -25,16 +25,16 @@ class Actor;
 
 template<std::size_t N>
 struct TupleComp {
-    template<typename... T, typename... U, std::size_t... I>
-    bool operator()(std::tuple<T...> const& a, std::tuple<U...> const& b, std::index_sequence<I...>) const {
-        return std::make_tuple(std::get<I>(a)...) < std::make_tuple(std::get<I>(b)...);
+    template<typename T, std::size_t... I>
+    static auto select_from_tuple(T const& t, std::index_sequence<I...>) {
+        return std::make_tuple(std::get<I>(t)...);
     }
-    template<typename... T, typename... U,
-             typename Indices = std::make_index_sequence<std::min(sizeof...(T), sizeof...(U))>>
+    template<typename... T, typename... U>
     bool operator()(std::tuple<T...> const& a, std::tuple<U...> const& b) const {
         static_assert(sizeof...(T) == N || sizeof...(U) == N, "at least one tuple shall be full size");
         static_assert(sizeof...(T) <= N && sizeof...(U) <= N, "both tuples shall be no longer than full size");
-        return operator()(a, b, Indices());
+        auto seq = std::make_index_sequence<std::min(sizeof...(T), sizeof...(U))>();
+        return select_from_tuple(a, seq) < select_from_tuple(b, seq);
     }
     typedef bool is_transparent;
 };
